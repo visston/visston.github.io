@@ -1159,10 +1159,23 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   ctxMenu.innerHTML='<button type="button" class="tc-edit" id="ctxEdit">✏️ Редактировать</button><button type="button" class="tc-del" id="ctxDel">🗑 Удалить</button>';
   document.body.appendChild(ctxMenu);
   var ctxUid=null;
-  function hideCtx(){ ctxMenu.style.display='none'; ctxUid=null; }
-  document.addEventListener('pointerdown',function(e){ if(!ctxMenu.contains(e.target)) hideCtx(); });
-  document.getElementById('ctxDel').addEventListener('click',function(){ if(ctxUid==null) return; hideCtx(); removeTileByUid(ctxUid); });
-  var ctxEditBtn=document.getElementById('ctxEdit'); if(ctxEditBtn) ctxEditBtn.addEventListener('click',function(){ if(ctxUid==null) return; var u=ctxUid; hideCtx(); editTileByUid(u); });
+  function hideCtx(){ ctxMenu.style.display='none'; }
+  document.addEventListener('pointerdown',function(e){
+    // не закрываем меню, если клик внутри него
+    if(ctxMenu.contains(e.target)) return;
+    hideCtx(); ctxUid=null;
+  });
+  // снапшот uid для обработчика кнопки меню: берём до того, как меню закроется
+  document.getElementById('ctxDel').addEventListener('click',function(){
+    var u=ctxUid; hideCtx(); ctxUid=null;
+    if(u==null) return;
+    removeTileByUid(u);
+  });
+  var ctxEditBtn=document.getElementById('ctxEdit'); if(ctxEditBtn) ctxEditBtn.addEventListener('click',function(){
+    var u=ctxUid; hideCtx(); ctxUid=null;
+    if(u==null) return;
+    editTileByUid(u);
+  });
   function removeTileByUid(uid){
     var a=document.querySelector('#tilesBox a.tile[data-uid="'+uid+'"]'); if(!a) return;
     a.style.transition='.15s'; a.style.opacity='0'; a.style.transform='scale(.9)';
