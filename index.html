@@ -90,6 +90,13 @@
   .m-field input{ width:100%; background:var(--panel); border:1px solid #2e2e3a; color:var(--txt); padding:12px 14px; border-radius:12px; font-size:14px; outline:none; transition:.2s; }
   .m-field input:focus{ border-color:var(--red); box-shadow:0 0 0 3px rgba(200,48,63,0.15); background:#15151e; }
   .m-preview{ font-size:11px; color:var(--dim); background:var(--panel); border:1px dashed #33333f; border-radius:10px; padding:8px 12px; margin-bottom:16px; }
+  .icon-picker{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:10px; }
+  .icon-picker .ipick{ aspect-ratio:1; background:var(--panel); border:1px solid var(--border); border-radius:10px; font-size:20px; cursor:pointer; display:flex;align-items:center;justify-content:center; transition:.15s; }
+  .icon-picker .ipick:hover{ border-color:var(--red); background:var(--panel2); transform:scale(1.08); }
+  .icon-picker .ipick.sel{ border-color:var(--red); background:rgba(200,48,63,0.16); box-shadow:0 0 0 2px var(--red-dim); }
+  .upload-row{ display:flex; gap:10px; align-items:center; margin-top:8px; }
+  .upload-row input[type=file]{ font-size:12px; color:var(--dim); }
+  .hint-sm{ font-size:11px; color:#5a5050; }
   .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
   .modal .btn{ padding:11px 20px; border-radius:11px; border:none; font-size:14px; font-weight:600; cursor:pointer; transition:.2s; }
   .modal .btn.cancel{ background:var(--panel2); color:var(--dim); border:1px solid var(--border); }
@@ -143,7 +150,7 @@
     display:flex; align-items:center; justify-content:center; user-select:none; touch-action:none; cursor:grab;
   }
   .fab:hover{ background:var(--red-bright); }
-  .fab.dragging{ cursor:grabbing; opacity:.9; transform:scale(1.08); }
+  .fab.dragging{ cursor:grabbing; opacity:.92; transform:none; }
 
   /* ===== ИИ-чат ===== */
   .chab{
@@ -153,7 +160,7 @@
     display:flex; align-items:center; justify-content:center; user-select:none; touch-action:none;
   }
   .chab:hover{ }
-  .chab.dragging{ cursor:grabbing; opacity:.92; transform:scale(1.08); }
+  .chab.dragging{ cursor:grabbing; opacity:.92; transform:none; }
   .chatbox{ position:fixed; left:22px; bottom:88px; width:min(360px,calc(100vw - 44px)); background:var(--panel);
     border:1px solid var(--border); border-radius:18px; box-shadow:0 12px 40px rgba(0,0,0,0.6); z-index:160;
     display:none; flex-direction:column; overflow:hidden;
@@ -206,6 +213,49 @@
   .why-foot{ padding:0 24px 22px; }
   .why-foot a{ display:block; text-align:center; background:var(--red); color:#fff; padding:13px; border-radius:12px; font-weight:600; text-decoration:none; box-shadow:0 4px 16px var(--red-dim); }
   .why-foot a:hover{ background:var(--red-bright); }
+
+  /* ===== Окно «Предложения и баги» ===== */
+  .fb-overlay{ position:fixed; inset:0; background:rgba(4,4,8,0.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:230; }
+  .fb-overlay.open{ display:flex; animation:fadeIn .2s ease; }
+  .fb-box{ width:min(500px,94vw); background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--border); border-radius:20px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.03), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px var(--red-dim);
+    overflow:hidden; animation:popIn .22s cubic-bezier(.2,.9,.3,1.2); }
+  .fb-head{ display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .fb-head .ic{ width:40px;height:40px;border-radius:12px; background:var(--red); color:#fff; display:flex;align-items:center;justify-content:center; font-size:20px; box-shadow:0 4px 14px var(--red-dim); }
+  .fb-head .t{ font:700 18px Georgia,serif; color:var(--gold); }
+  .fb-head .x{ margin-left:auto; background:transparent;border:none;color:var(--dim);font-size:20px;cursor:pointer; }
+  .fb-head .x:hover{ color:var(--red-bright); }
+  .fb-body{ padding:20px 22px; }
+  .fb-body .fb-type{ display:flex; gap:10px; margin-bottom:14px; }
+  .fb-body .fb-type button{ flex:1; background:var(--panel); border:1px solid var(--border); color:var(--txt); padding:11px; border-radius:11px; cursor:pointer; font-size:14px; transition:.15s; }
+  .fb-body .fb-type button.on{ border-color:var(--red); background:rgba(200,48,63,0.14); color:var(--red-bright); }
+  .fb-body textarea{ width:100%; min-height:110px; background:var(--panel); border:1px solid #2e2e3a; color:var(--txt); padding:12px 14px; border-radius:12px; font-size:14px; resize:vertical; outline:none; font-family:inherit; }
+  .fb-body textarea:focus{ border-color:var(--red); }
+  .fb-body .fb-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+  .fb-body .btn{ padding:11px 20px; border-radius:11px; border:none; font-size:14px; font-weight:600; cursor:pointer; }
+  .fb-body .btn.cancel{ background:var(--panel2); color:var(--dim); border:1px solid var(--border); }
+  .fb-body .btn.send{ background:var(--red); color:#fff; box-shadow:0 4px 14px var(--red-dim); }
+  .fb-body .btn.send:hover{ background:var(--red-bright); }
+  .fb-status{ margin-top:12px; font-size:12px; color:var(--gold); text-align:center; min-height:16px; }
+
+  /* ===== Окно «Как пользоваться» ===== */
+  .how-overlay{ position:fixed; inset:0; background:rgba(4,4,8,0.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:240; }
+  .how-overlay.open{ display:flex; animation:fadeIn .2s ease; }
+  .how-box{ width:min(620px,94vw); background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--border); border-radius:20px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.03), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px var(--red-dim);
+    overflow:hidden; animation:popIn .22s cubic-bezier(.2,.9,.3,1.2); max-height:88vh; overflow-y:auto; }
+  .how-head{ display:flex; align-items:center; gap:12px; padding:18px 24px; border-bottom:1px solid var(--border); }
+  .how-head .ic{ width:40px;height:40px;border-radius:12px; background:var(--red); color:#fff; display:flex;align-items:center;justify-content:center; font-size:20px; box-shadow:0 4px 14px var(--red-dim); }
+  .how-head .t{ font:700 18px Georgia,serif; color:var(--gold); }
+  .how-head .x{ margin-left:auto; background:transparent;border:none;color:var(--dim);font-size:20px;cursor:pointer; }
+  .how-head .x:hover{ color:var(--red-bright); }
+  .how-body{ padding:22px 24px; }
+  .how-body h4{ color:var(--red-bright); font:600 15px Georgia; margin:16px 0 8px; }
+  .how-body h4:first-child{ margin-top:0; }
+  .how-body ul{ list-style:none; }
+  .how-body li{ position:relative; padding:6px 0 6px 26px; color:var(--dim); font-size:13.5px; line-height:1.5; }
+  .how-body li::before{ content:'◆'; position:absolute; left:4px; top:6px; color:var(--red); font-size:10px; }
+  .how-body li b{ color:var(--txt); }
 </style>
 </head>
 <body>
@@ -218,6 +268,8 @@
   <button class="ctl" id="bgBtn" title="Сменить фон">🖼 Фон</button>
   <button class="ctl" id="nightBtn" title="День / Вечер / Утро">🌙 <span id="nightLbl">Ночь</span></button>
   <button class="ctl" id="whyBtn" title="Почему стоит использовать наш сайт">💎 Почему мы</button>
+  <button class="ctl" id="howBtn" title="Как пользоваться сайтом">❓ Как пользоваться</button>
+  <button class="ctl" id="fbBtn" title="Предложения и баги">📮</button>
   <a class="link" href="index.html">Главная</a>
   <a class="link" href="isaac.html">Isaac</a>
   <a class="link" href="links.html">Ссылки</a>
@@ -244,8 +296,6 @@
         <a class="tile" href="https://store.steampowered.com"><div class="ic" style="background:#1b2838;">🎮</div><span>Steam</span></a>
         <a class="tile" href="https://www.youtube.com"><div class="ic" style="background:#2d0a0a;">▶</div><span>YouTube</span></a>
         <a class="tile" href="https://discord.com/app"><div class="ic" style="background:#202225;">🎧</div><span>Discord</span></a>
-        <a class="tile" href="https://vk.com"><div class="ic" style="background:#0e2637;">💭</div><span>VK</span></a>
-        <a class="tile" href="https://www.roblox.com"><div class="ic" style="background:#202225;">🧱</div><span>Roblox</span></a>
         <a class="tile" href="https://bindingofisaac.fandom.com/wiki/Binding_of_Isaac_Wiki"><div class="ic" style="background:#3a1a1a;">📖</div><span>Isaac Wiki</span></a>
         <a class="tile" href="https://www.twitch.tv"><div class="ic" style="background:#4b367c;">🎥</div><span>Twitch</span></a>
         <a class="tile" href="https://kick.com"><div class="ic" style="background:#18b21f;">👟</div><span>Kick</span></a>
@@ -291,10 +341,31 @@
           <input id="tUrl" type="text" placeholder="https://example.com">
         </div>
         <div class="m-field">
-          <label for="tImg">🖼 Картинка (URL, необязательно)</label>
-          <input id="tImg" type="text" placeholder="https://.../icon.png">
+          <label>🖼 Иконка (выбери готовую или загрузи картинку)</label>
+          <div class="icon-picker" id="iconPicker">
+            <button type="button" class="ipick" data-ic="🔗" title="Ссылка">🔗</button>
+            <button type="button" class="ipick" data-ic="🎮" title="Игра">🎮</button>
+            <button type="button" class="ipick" data-ic="🎧" title="Музыка/общение">🎧</button>
+            <button type="button" class="ipick" data-ic="▶" title="Видео">▶</button>
+            <button type="button" class="ipick" data-ic="🎥" title="Стримы">🎥</button>
+            <button type="button" class="ipick" data-ic="📺" title="ТВ/сериалы">📺</button>
+            <button type="button" class="ipick" data-ic="🛒" title="Магазин">🛒</button>
+            <button type="button" class="ipick" data-ic="💬" title="Чат/соцсеть">💬</button>
+            <button type="button" class="ipick" data-ic="📚" title="Вики/чтение">📚</button>
+            <button type="button" class="ipick" data-ic="🤖" title="ИИ">🤖</button>
+            <button type="button" class="ipick" data-ic="💎" title="Крипта/бонус">💎</button>
+            <button type="button" class="ipick" data-ic="⭐" title="Избранное">⭐</button>
+          </div>
         </div>
-        <div class="m-preview" id="mPreview">Будет показана иконка, если указать картинку.</div>
+        <div class="m-field">
+          <label for="tImg">🖼 Или картинка (URL или файл с ПК)</label>
+          <input id="tImg" type="text" placeholder="https://.../icon.png или выбери файл ниже">
+          <div class="upload-row">
+            <input type="file" id="tImgFile" accept="image/*">
+            <span class="hint-sm">свой файл с компьютера</span>
+          </div>
+        </div>
+        <div class="m-preview" id="mPreview">Иконка: 🔗</div>
         <div class="modal-actions">
           <button type="button" class="btn cancel" id="tCancel">Отмена</button>
           <button type="submit" class="btn save">Добавить плитку</button>
@@ -344,6 +415,69 @@
       <div class="why-foot"><a href="index.html">Начать использовать →</a></div>
     </div>
   </div>
+
+  <!-- Предложения и баги -->
+  <div class="fb-overlay" id="fbOverlay">
+    <div class="fb-box">
+      <div class="fb-head">
+        <span class="ic">📮</span>
+        <span class="t">Предложения и баги</span>
+        <button type="button" class="x" id="fbClose" title="Закрыть">✕</button>
+      </div>
+      <div class="fb-body">
+        <div class="fb-type" id="fbType">
+          <button type="button" class="on" data-fb="idea">💡 Предложение</button>
+          <button type="button" data-fb="bug">🐞 Нашёл баг</button>
+        </div>
+        <textarea id="fbText" placeholder="Опиши идею или проблему..."></textarea>
+        <div class="fb-status" id="fbStatus"></div>
+        <div class="fb-actions">
+          <button type="button" class="btn cancel" id="fbCancel">Отмена</button>
+          <button type="button" class="btn send" id="fbSend">Отправить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Как пользоваться сайтом -->
+  <div class="how-overlay" id="howOverlay">
+    <div class="how-box">
+      <div class="how-head">
+        <span class="ic">❓</span>
+        <span class="t">Как пользоваться VISSTON ✕ CAIN</span>
+        <button type="button" class="x" id="howClose" title="Закрыть">✕</button>
+      </div>
+      <div class="how-body">
+        <h4>📌 Для чего этот сайт</h4>
+        <ul>
+          <li>Твой персональный уголок в стиле <b>The Binding of Isaac</b> — и стартовая страница, и справочник, и место для ссылок.</li>
+        </ul>
+        <h4>🏠 Главная</h4>
+        <ul>
+          <li><b>Поиск</b> — Enter открывает Яндекс, <b>Alt+G</b> — Google.</li>
+          <li><b>📷 слева от поиска</b> — поиск по картинке: выбери фото на ПК — найдёт где встречается.</li>
+          <li><b>Плитки</b> — быстрые ссылки. Нажми <b>➕ (кружок + внизу)</b>, чтобы добавить свою: название, ссылку, иконку или картинку с ПК. Удалить свою плитку — <b>правая кнопка мыши</b>.</li>
+          <li><b>🕘 Последнее</b> — открыть последний сайт, который ты смотрел.</li>
+        </ul>
+        <h4>🎨 Темы</h4>
+        <ul>
+          <li>Кнопка <b>🎨 Темы</b> — выбери персонажа Isaac или Проклятую версию: меняется цвет, фон и логотип.</li>
+        </ul>
+        <h4>🤖 ИИ-чат</h4>
+        <ul>
+          <li>Кружок <b>🤖</b> внизу — живой чат с ИИ. Пиши вопрос, Enter — ответ. Кнопка <b>🖼</b> — нарисовать картинку по описанию.</li>
+        </ul>
+        <h4>⚙️ Настройки вида</h4>
+        <ul>
+          <li><b>🖼 Фон</b> — смена фона · <b>🌙 Ночь</b> — режим день/вечер/утро.</li>
+        </ul>
+        <h4>✂️ Alt+клик</h4>
+        <ul>
+          <li>Зажми <b>Alt</b> и кликни по ссылке — адрес скопируется, чтобы вставить в приватное окно.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </main>
 <!-- Тост для Alt+клик -->
 <div class="alt-toast" id="altToast"><div id="altToastText"></div><span class="link" id="altToastLink"></span></div>
@@ -355,10 +489,7 @@
   <div class="chat-head">
     <span class="tt">VISSTON AI</span>
     <select id="modelSel" title="Модель">
-      <option value="openai">OpenAI (умный)</option>
-      <option value="openai-large">OpenAI (большой)</option>
-      <option value="mistral">Mistral (быстрый)</option>
-      <option value="llama">Llama (мощный)</option>
+      <option value="openai">✨ OpenAI (умный)</option>
     </select>
     <button type="button" id="chatReset" title="Очистить">🗑</button>
     <button type="button" id="chatClose" title="Закрыть">✕</button>
@@ -366,9 +497,10 @@
   <div class="chat-msgs" id="chatMsgs"></div>
   <div class="chat-in">
     <textarea id="chatInput" placeholder="Спроси что угодно..." rows="1"></textarea>
+    <button type="button" id="chatImg" title="Нарисовать картинку">🖼</button>
     <button type="button" id="chatSend">➤</button>
   </div>
-  <div class="chat-tip">Бесплатный ИИ · отвечает в новом запросе (Enter — отправить)</div>
+  <div class="chat-tip">Бесплатный ИИ · Enter — отправить · 🖼 — нарисовать картинку по описанию</div>
 </div>
 <script>
   function tick(){
@@ -383,46 +515,92 @@
   function dg(f){ var q=f.q.value.trim(); if(!q)return false; window.location='https://yandex.ru/search/?text='+encodeURIComponent(q); return false; }
   document.addEventListener('keydown',function(e){ if(e.altKey && e.key.toLowerCase()==='g'){ e.preventDefault(); var q=document.getElementById('q').value.trim(); if(q)window.location='https://www.google.com/search?q='+encodeURIComponent(q); } });
 
-  /* ===== Добавление плиток ===== */
-  var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementById('modalOverlay'), addBtn=document.getElementById('addBtn'), SKEY='cain_custom_tiles';
-  function openModal(){ overlay.classList.add('open'); document.getElementById('tName').focus(); }
-  function closeModal(){ overlay.classList.remove('open'); document.getElementById('tForm').reset(); }
-  addBtn.addEventListener('click',openModal);
-  var fabBtn=document.getElementById('fabBtn'); if(fabBtn) fabBtn.addEventListener('click',openModal);
-
-  /* ===== Поиск по картинке ===== */
+  /* ===== Поиск по картинке (📷) ===== */
   var imgBtn=document.getElementById('imgBtn'), imgFile=document.getElementById('imgFile');
   if(imgBtn) imgBtn.addEventListener('click',function(){ imgFile.click(); });
   if(imgFile) imgFile.addEventListener('change',function(){
     var f=imgFile.files[0]; if(!f) return;
-    var rd=new FileReader();
-    rd.onload=function(e){
-      var data=e.target.result;
-      // открываем поиск по картинке Яндекса с загруженным изображением
-      window.open('https://yandex.ru/images/search?rpt=imageview&url='+encodeURIComponent(data), '_blank');
-    };
-    rd.readAsDataURL(f);
+    // создаём невидимую multipart-форму и отправляем файл на Яндекс — браузер сам покажет результаты
+    var form=document.createElement('form');
+    form.method='POST'; form.action='https://yandex.ru/images/search'; form.target='_blank';
+    form.style.display='none';
+    var inp=document.createElement('input'); inp.type='file'; inp.name='upfile'; inp.style.display='none';
+    var rpt=document.createElement('input'); rpt.type='hidden'; rpt.name='rpt'; rpt.value='imageview';
+    var aj=document.createElement('input'); aj.type='hidden'; aj.name='ajax'; aj.value='0';
+    form.appendChild(inp); form.appendChild(rpt); form.appendChild(aj);
+    // с .files нельзя напрямую — используем DataTransfer
+    try{
+      var dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files;
+      document.body.appendChild(form); form.submit(); form.remove();
+    }catch(_){ window.open(f?URL.createObjectURL(f):'https://yandex.ru/images/search','_blank'); }
+    imgFile.value='';
   });
-  overlay.addEventListener('click',function(e){ if(e.target===overlay) closeModal(); });
-  var mClose=document.getElementById('mClose'); if(mClose) mClose.addEventListener('click',closeModal);
-  document.getElementById('tCancel').addEventListener('click',closeModal);
+
+  /* ===== Добавление плиток ===== */
+var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementById('modalOverlay'), addBtn=document.getElementById('addBtn'), SKEY='cain_custom_tiles';
+  var tileUid=0;
+  function openModal(){ overlay.classList.add('open'); document.getElementById('tName').focus(); }
+  function closeModal(){ overlay.classList.remove('open'); document.getElementById('tForm').reset(); _selIcon='🔗'; _fileImg=''; }
+  addBtn.addEventListener('click',openModal);
+  var fabBtn=document.getElementById('fabBtn'); if(fabBtn) fabBtn.addEventListener('click',openModal);
   function loadSaved(){ try{ var r=localStorage.getItem(SKEY); return r?JSON.parse(r):[]; }catch(e){ return []; } }
   function saveAll(l){ try{ localStorage.setItem(SKEY,JSON.stringify(l)); }catch(e){} }
-  function buildTile(t){ var a=document.createElement('a'); a.className='tile'; a.href=t.url; a.target='_blank';
-    var img=t.img?'<div class="ic"><img src="'+encodeURI(t.img)+'" alt=""></div>':'<div class="ic">🔗</div>';
+  function buildTile(t, custom){
+    var a=document.createElement('a'); a.className='tile'; a.href=t.url; a.target='_blank';
+    if(custom){ a.setAttribute('data-uid', (t.uid!==undefined?t.uid:(tileUid++))); a.setAttribute('data-custom','1'); }
+    var ic=t.icon || '🔗';
+    var img=t.img?'<div class="ic"><img src="'+encodeURI(t.img)+'" alt=""></div>':'<div class="ic">'+ic+'</div>';
     a.innerHTML=img+'<span></span>'; a.querySelector('span').textContent=t.name; return a; }
-  var saved=loadSaved(); saved.forEach(function(t){ tilesBox.appendChild(buildTile(t)); });
+  // удаление пользовательской плитки правой кнопкой
+  tilesBox.addEventListener('contextmenu',function(e){
+    var a=e.target.closest ? e.target.closest('a.tile') : null;
+    if(!a || a.getAttribute('data-custom')!=='1') return;
+    e.preventDefault();
+    var uid=a.getAttribute('data-uid');
+    a.style.transition='.15s'; a.style.opacity='0'; a.style.transform='scale(.9)';
+    setTimeout(function(){
+      a.remove();
+      saved = saved.filter(function(x){ return String(x.uid)!==String(uid); });
+      saveAll(saved);
+    },150);
+  });
+  function insertTile(el){ tilesBox.insertBefore(el, addBtn); }
+  var saved=loadSaved(); saved.forEach(function(t){ if(t.uid===undefined) t.uid=tileUid++; insertTile(buildTile(t,true)); });
   document.getElementById('tForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('tName').value.trim(), url=document.getElementById('tUrl').value.trim(), img=document.getElementById('tImg').value.trim();
     if(!name||!url) return;
-    var t={name:name,url:url,img:img}; saved.push(t); saveAll(saved); tilesBox.appendChild(buildTile(t)); closeModal();
+    var icon=_selIcon || '🔗';
+    var t={name:name,url:url,img:(img||_fileImg||''),icon:icon,uid:tileUid++}; saved.push(t); saveAll(saved); insertTile(buildTile(t,true)); closeModal();
+    _selIcon='🔗'; _fileImg='';
   });
-  // живое превью иконки
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) closeModal(); });
+  var mClose=document.getElementById('mClose'); if(mClose) mClose.addEventListener('click',closeModal);
+  document.getElementById('tCancel').addEventListener('click',closeModal);
+
+  /* выбор иконки + загрузка своего файла */
+  var _selIcon='🔗', _fileImg='';
+  var tImgFile=document.getElementById('tImgFile');
+  if(tImgFile) tImgFile.addEventListener('change',function(){
+    var f=tImgFile.files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(ev){ _fileImg=ev.target.result; document.getElementById('tImg').value=''; document.getElementById('mPreview').textContent='🖼 Выбран свой файл с ПК.'; };
+    rd.readAsDataURL(f);
+  });
+  document.querySelectorAll('#iconPicker .ipick').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#iconPicker .ipick').forEach(function(x){x.classList.remove('sel');});
+      b.classList.add('sel');
+      _selIcon=b.getAttribute('data-ic')||'🔗';
+      document.getElementById('tImg').value='';
+      document.getElementById('mPreview').textContent='Иконка: '+_selIcon;
+    });
+  });
+  // живое превью картинки
   document.getElementById('tImg').addEventListener('input',function(){
     var v=this.value.trim(), p=document.getElementById('mPreview');
     if(v){ try{ p.innerHTML='🖼 Будет показана: <span style="color:var(--gold)">'+v.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }catch(e){ p.textContent='🖼 Указана картинка.'; } }
-    else { p.textContent='Будет показана иконка, если указать картинку.'; }
+    else { p.textContent='Иконка: '+_selIcon; }
   });
 
   /* ===== Кнопки навбара ===== */
@@ -507,7 +685,20 @@
     {n:'Jacob & Esau', t:'', c:'#8070a0', bg:'#101018'},
     {n:'Tainted Jacob', t:'Проклятый', c:'#a080c0', bg:'#120e16'},
     {n:'The Soul', t:'', c:'#60a0d0', bg:'#0a1218'},
-    {n:'Forgotten Bone', t:'', c:'#c0c0c0', bg:'#121212'}
+    {n:'Forgotten Bone', t:'', c:'#c0c0c0', bg:'#121212'},
+    {n:'Cain (Red Eye)', t:'Альтернатива', c:'#ff4040', bg:'#180808'},
+    {n:'Isaac (Blood)', t:'Альтернатива', c:'#b02040', bg:'#12060a'},
+    {n:'Judas (Dark)', t:'Альтернатива', c:'#702020', bg:'#0d0505'},
+    {n:'The Forgotten (Soul)', t:'Альтернатива', c:'#4090c0', bg:'#081118'},
+    {n:'Некрономикон', t:'Предмет', c:'#8a1a1a', bg:'#0d0505'},
+    {n:'Планетарий', t:'Атмосфера', c:'#7a50c0', bg:'#0a0714'},
+    {n:'Комната сокровищ', t:'Атмосфера', c:'#d8c040', bg:'#181204'},
+    {n:'Ангельская комната', t:'Атмосфера', c:'#e0e0c0', bg:'#10100a'},
+    {n:'Дьявольская комната', t:'Атмосфера', c:'#a00020', bg:'#0f0305'},
+    {n:'Подвал', t:'Локация', c:'#6a7a4a', bg:'#0d1008'},
+    {n:'Шахты', t:'Локация', c:'#b08a50', bg:'#120c06'},
+    {n:'Пещера', t:'Локация', c:'#7a5a80', bg:'#0e0812'},
+    {n:'Глубины', t:'Локация', c:'#4a6a8a', bg:'#070d14'}
   ];
   var tkey='cain_theme';
   function applyTheme(th){
@@ -540,6 +731,58 @@
   document.getElementById('whyBtn').addEventListener('click',function(){ whyOverlay.classList.add('open'); });
   document.getElementById('whyClose').addEventListener('click',function(){ whyOverlay.classList.remove('open'); });
   whyOverlay.addEventListener('click',function(e){ if(e.target===whyOverlay) whyOverlay.classList.remove('open'); });
+
+  /* ===== Предложения и баги ===== */
+  var fbOverlay=document.getElementById('fbOverlay');
+  var fbType='idea';
+  document.getElementById('fbBtn').addEventListener('click',function(){
+    fbOverlay.classList.add('open'); document.getElementById('fbText').focus();
+  });
+  document.getElementById('fbClose').addEventListener('click',function(){ fbOverlay.classList.remove('open'); });
+  document.getElementById('fbCancel').addEventListener('click',function(){ fbOverlay.classList.remove('open'); document.getElementById('fbText').value=''; });
+  fbOverlay.addEventListener('click',function(e){ if(e.target===fbOverlay) fbOverlay.classList.remove('open'); });
+  document.querySelectorAll('#fbType button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#fbType button').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on'); fbType=b.getAttribute('data-fb');
+    });
+  });
+  document.getElementById('fbSend').addEventListener('click',function(){
+    var text=document.getElementById('fbText').value.trim();
+    if(!text){ document.getElementById('fbStatus').textContent='Поле пустое.'; return; }
+    var isBug = (fbType==='bug');
+    var status=document.getElementById('fbStatus');
+    // отправка в Discord-вебхук разработчика
+    var WHURL='https://discord.com/api/webhooks/1574002746535845972/DGTXxn4pniGocC9-haZhYrXUlZu3zE80eT3juN8YA608N8fkN4eVA-Zb5UGdDcpl8A5z';
+    var payload={
+      content: '',
+      embeds: [{
+        title: isBug ? '🐞 Новый баг' : '💡 Новое предложение',
+        description: text,
+        color: isBug ? 0xFF4D4D : 0x4DA6FF,
+        footer: { text: 'VISSTON \u00D7 CAIN · фидбек' },
+        timestamp: new Date().toISOString()
+      }]
+    };
+    function done(ok){
+      if(ok){ status.textContent = 'Доставлено в Discord разработчику. Спасибо!'; }
+      else { status.textContent = 'Не удалось доставить. Проверь интернет и попробуй ещё раз.'; }
+      document.getElementById('fbText').value='';
+      try{ var arr=JSON.parse(localStorage.getItem('cain_feedback')||'[]'); arr.push({type:fbType,text:text,at:new Date().toISOString(),to:'discord'}); localStorage.setItem('cain_feedback',JSON.stringify(arr)); }catch(e){}
+      setTimeout(function(){ fbOverlay.classList.remove('open'); status.textContent=''; }, 2600);
+    }
+    // если вебхук не настроен — не отправляем, сообщаем
+    if(WHURL.indexOf('__DISCORD')===0){ done(false); return; }
+    fetch(WHURL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){ done(r.ok); })
+      .catch(function(){ done(false); });
+  });
+
+  /* ===== Как пользоваться сайтом ===== */
+  var howOverlay=document.getElementById('howOverlay');
+  document.getElementById('howBtn').addEventListener('click',function(){ howOverlay.classList.add('open'); });
+  document.getElementById('howClose').addEventListener('click',function(){ howOverlay.classList.remove('open'); });
+  howOverlay.addEventListener('click',function(e){ if(e.target===howOverlay) howOverlay.classList.remove('open'); });
 
   /* ===== Смена фона ===== */
   var bgs=['#0a0a0f','#100a14','#0a1408','#101218','#140a08','#0a0a1a'];
@@ -580,46 +823,63 @@
   /* ===== Перетаскивание кругов (молния ИИ и +) ===== */
   function makeDraggable(el){
     if(!el) return;
-    var offX=0, offY=0, startX=0, startY=0, sx=0, sy=0, dragging=false, moved=false, justDragged=false;
+    var drag=null; // {offX,offY,moved,just}
+    var SIZE=el.offsetWidth||58;
+    function cleanup(e){
+      if(!drag) return;
+      if(movedSafe()){ if(e && e.preventDefault) e.preventDefault(); if(e&&e.stopPropagation)e.stopPropagation(); }
+      endDragState();
+    }
+    function movedSafe(){ return drag ? drag.moved : false; }
+    function endDragState(){
+      if(!drag) return;
+      el.style.transition=''; el.classList.remove('dragging');
+      try{ localStorage.setItem('coin_pos_'+el.id, el.style.left+'|'+el.style.top); }catch(_){}
+      drag=null;
+    }
     el.addEventListener('pointerdown',function(e){
-      dragging=true; moved=false;
+      if(e.button!==0 && e.pointerType==='mouse') return; // только ЛКМ
       var r=el.getBoundingClientRect();
-      // смещение курсора внутри элемента — чтобы круг «цеплялся» за точку нажатия
-      offX = e.clientX - r.left;
-      offY = e.clientY - r.top;
-      startX=e.clientX; startY=e.clientY;
-      sx=r.left; sy=r.top;
-      el.style.transition='none';
-      el.classList.add('dragging');
+      drag={ offX:e.clientX-r.left, offY:e.clientY-r.top, moved:false, just:false };
+      el.style.transition='none'; el.classList.add('dragging');
       try{ el.setPointerCapture(e.pointerId); }catch(_){}
     });
     el.addEventListener('pointermove',function(e){
-      if(!dragging) return;
-      var dx=e.clientX-startX, dy=e.clientY-startY;
-      if(Math.abs(dx)>4 || Math.abs(dy)>4){ moved=true; justDragged=true; }
-      if(!moved) return;
-      // позиция влево/вверх с учётом точки захвата
-      var nx = e.clientX - offX, ny = e.clientY - offY;
-      nx=Math.max(0, Math.min(window.innerWidth-el.offsetWidth, nx));
-      ny=Math.max(0, Math.min(window.innerHeight-el.offsetHeight, ny));
+      if(!drag) return;
+      var dx=e.clientX-(drag.offX+el.getBoundingClientRect().left), dy=e.clientY-(drag.offY+el.getBoundingClientRect().top);
+      // пересчитываем смещение относительно текущей позиции, чтобы курсор не улетал
+      var cur=el.getBoundingClientRect();
+      var offX=e.clientX-cur.left, offY=e.clientY-cur.top;
+      if(Math.abs(offX-drag.offX)>6 || Math.abs(offY-drag.offY)>6){ drag.moved=true; drag.just=true; }
+      var nx = e.clientX - drag.offX, ny = e.clientY - drag.offY;
+      var TASKBAR=48; // запас под панель задач, чтобы кружок не уходил под неё
+      nx=Math.max(0, Math.min(window.innerWidth-SIZE, nx));
+      ny=Math.max(0, Math.min(window.innerHeight-SIZE-TASKBAR, ny));
       el.style.left=nx+'px'; el.style.top=ny+'px'; el.style.right='auto'; el.style.bottom='auto';
     });
-    function endDrag(e){
-      if(!dragging) return;
-      dragging=false; el.style.transition=''; el.classList.remove('dragging');
-      // сохраним позицию
-      try{ localStorage.setItem('coin_pos_'+el.id, el.style.left+'|'+el.style.top); }catch(_){}
-      if(moved){ e.preventDefault(); e.stopPropagation(); }
-    }
-    el.addEventListener('pointerup',endDrag);
-    el.addEventListener('pointercancel',endDrag);
+    el.addEventListener('pointerup',cleanup);
+    el.addEventListener('pointercancel',cleanup);
+    // если фокус ушёл (потерян указатель), сбрасываем состояние
+    window.addEventListener('blur',function(){ if(drag){ endDragState(); } });
     // отменяем «клик» после перетаскивания
-    el.addEventListener('click',function(e){ if(justDragged){ e.preventDefault(); e.stopPropagation(); justDragged=false; } }, true);
+    el.addEventListener('click',function(e){ if(drag && drag.just){ e.preventDefault(); e.stopPropagation(); drag.just=false; } }, true);
   }
   (function applySavedPos(){
     ['fabBtn','chabBtn'].forEach(function(id){
       var el=document.getElementById(id); if(!el) return;
-      try{ var p=localStorage.getItem('coin_pos_'+id); if(p){ var parts=p.split('|'); el.style.left=parts[0]; el.style.top=parts[1]; el.style.right='auto'; el.style.bottom='auto'; } }catch(_){}
+      try{ var p=localStorage.getItem('coin_pos_'+id); if(p){
+        var parts=p.split('|');
+        var l=parseFloat(parts[0]), t=parseFloat(parts[1]);
+        var vw=window.innerWidth, vh=window.innerHeight;
+        var bad = isNaN(l)||isNaN(t)||l<0||t<0||l>=vw||t>=vh;
+        if(bad){
+          // позиция невалидна/вне экрана — ставим по умолчанию в углу и спасительно правой кнопке
+          if(id==='fabBtn'){ el.style.left='auto'; el.style.top='auto'; el.style.right='22px'; el.style.bottom='22px'; }
+          else { el.style.left='auto'; el.style.top='auto'; el.style.right='auto'; el.style.left='22px'; el.style.bottom='22px'; }
+        } else {
+          el.style.left=l+'px'; el.style.top=t+'px'; el.style.right='auto'; el.style.bottom='auto';
+        }
+      } }catch(_){}
       makeDraggable(el);
     });
   })();
@@ -710,6 +970,22 @@
   }
   chatSend.addEventListener('click',ask);
   chatInput.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ask(); } });
+  // генерация картинки
+  var chatImgBtn=document.getElementById('chatImg');
+  function genImage(){
+    var text=chatInput.value.trim(); if(!text||busy) return; chatInput.value='';
+    addMsg('user','🖼 '+text); setBusy(true);
+    var wait=addMsg('ai','Рисую…'); setBusy(true);
+    var seed=Math.floor(Math.random()*100000);
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(text)+'?width=512&height=384&seed='+seed+'&nologo=true';
+    var img=document.createElement('img');
+    img.style.maxWidth='100%'; img.style.borderRadius='10px'; img.style.marginTop='4px';
+    img.alt='сгенерированная картинка';
+    img.onload=function(){ wait.textContent=''; wait.appendChild(img); setBusy(false); chatInput.focus(); };
+    img.onerror=function(){ wait.className='msg err'; wait.textContent='Не удалось нарисовать. Попробуй иначе описать.'; setBusy(false); };
+    img.src=url;
+  }
+  if(chatImgBtn) chatImgBtn.addEventListener('click',genImage);
   // не прячем окно при клике внутри
   chatbox.addEventListener('click',function(e){ e.stopPropagation(); });
 
