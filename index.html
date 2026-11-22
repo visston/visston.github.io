@@ -40,7 +40,7 @@
   .nav select.ctl{ background:var(--panel2); border:1px solid var(--border); color:var(--txt); padding:8px 10px; border-radius:9px; font-size:13.5px; cursor:pointer; }
   .nav select.ctl:focus{ outline:none; border-color:var(--red); }
   .glow{ position:fixed; width:60vmin; height:60vmin; left:50%; top:40%; transform:translate(-50%,-50%) rotate(45deg); border:2px solid var(--glow-line); pointer-events:none; z-index:0; }
-  #bgCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.5; }
+  #bgCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.85; }
   main{ position:relative; z-index:1; }
   .brand-main{ letter-spacing:3px; }
 
@@ -155,6 +155,12 @@
   .theme-grid.items{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
   .theme-item.item .nm{ font-size:11px; line-height:1.2; }
   .theme-item.item .tt{ font-size:9px; line-height:1.3; word-break:break-word; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .item-tally{ margin-bottom:12px; font-size:13px; color:var(--gold); font-weight:600; text-align:center; }
+  .theme-item.item.owned{ border-color:var(--gold); }
+  .theme-item.item.owned .nm{ color:var(--gold); }
+  .theme-panel .row{ display:flex; gap:8px; margin-top:12px; }
+  .theme-panel .row button{ background:var(--panel2); border:1px solid var(--border); color:var(--dim); padding:8px 14px; border-radius:10px; cursor:pointer; font-size:12px; }
+  .theme-panel .row button:hover{ border-color:var(--red); color:var(--txt); }
   .theme-close{ margin-top:16px; text-align:right; }
   .theme-close button{ background:var(--red); border:none; color:#fff; padding:10px 20px; border-radius:9px; font-weight:600; cursor:pointer; }
 
@@ -521,7 +527,9 @@
       </div>
       <div class="theme-panel" id="tp-items" style="display:none">
         <input id="itemSearch" type="text" placeholder="🔍 Поиск предмета..." autocomplete="off">
+        <div class="item-tally" id="itemTally"></div>
         <div class="theme-grid items" id="itemGrid"></div>
+        <div class="row"><button id="itemReset">Сбросить сбор</button></div>
       </div>
       <div class="theme-close"><button id="themeClose">Готово</button></div>
     </div>
@@ -1740,61 +1748,109 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   var accentRBG=hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--red-bright').trim()||'#e0485a');
   var ANIM_KEY='cain_anim';
   var anims=[
-    {n:'Туман', id:'mist', t:''},{n:'Звёзды', id:'stars', t:''},{n:'Снег', id:'snow', t:''},
-    {n:'Дождь', id:'rain', t:''},{n:'Огонь', id:'fire', t:''},{n:'Пузыри', id:'bubbles', t:''},
-    {n:'Искры', id:'sparks', t:''},{n:'Пыль', id:'dust', t:''},{n:'Рой', id:'swarm', t:''},
-    {n:'Водоворот', id:'vortex', t:''},{n:'Пыльца', id:'pollen', t:''},{n:'Хаос', id:'chaos', t:''},
-    {n:'Падшие звёзды', id:'meteor', t:''},{n:'Тьма', id:'dark', t:''},{n:'Эхо', id:'echo', t:''},
-    {n:'Жертва', id:'blood', t:''},{n:'Мечты', id:'dream', t:''},{n:'Грех', id:'sin', t:''},
-    {n:'Пылающий', id:'brim', t:''},{n:'Слёзы', id:'tears', t:''},{n:'Скелеты', id:'bone', t:''},
-    {n:'Комната духа', id:'soul', t:''},{n:'Волны', id:'wave', t:''},{n:'Молнии', id:'bolt', t:''},
-    {n:'Свечение', id:'glow', t:''},{n:'Летучие', id:'fly', t:''},{n:'Сущность', id:'essence', t:''},
-    {n:'Золотой', id:'gold', t:''},{n:'Кристаллы', id:'crystal', t:''},{n:'Туманы ада', id:'hell', t:''},
-    {n:'Розовый', id:'pink', t:''},{n:'Абисс', id:'abyss', t:''},{n:'Небесный', id:'heaven', t:''},
-    {n:'Лавовый', id:'lava', t:''},{n:'Ледяной', id:'ice', t:''},{n:'Ядовитый', id:'toxic', t:''},
-    {n:'Багровый', id:'crimson', t:''},{n:'Изумруд', id:'emerald', t:''},{n:'Сапфир', id:'sapphire', t:''},
-    {n:'Рубин', id:'ruby', t:''},{n:'Янтарный', id:'amber', t:''},{n:'Турмалин', id:'tourmaline', t:''},
-    {n:'Опал', id:'opal', t:''},{n:'Оникс', id:'onyx', t:''},{n:'Перидот', id:'peridot', t:''},
-    {n:'Аметист', id:'amethyst', t:''},{n:'Топаз', id:'topaz', t:''},{n:'Циркон', id:'zircon', t:''}
+    {n:'Туман', id:'mist', t:'плавающие пятна', c:'#9aa7b5', type:'drift'},
+    {n:'Звёзды', id:'stars', t:'мерцающие точки', c:'#ffffff', type:'rise'},
+    {n:'Снег', id:'snow', t:'падающие снежинки', c:'#dfeaf3', type:'snow'},
+    {n:'Дождь', id:'rain', t:'косые линии', c:'#7fb2e0', type:'rain'},
+    {n:'Огонь', id:'fire', t:'взлетающие языки', c:'#ff7a3c', type:'fire'},
+    {n:'Пузыри', id:'bubbles', t:'поднимающиеся круги', c:'#8fe0d8', type:'bubbles'},
+    {n:'Искры', id:'sparks', t:'разлетающиеся точки', c:'#ffd54a', type:'swarm'},
+    {n:'Пыль', id:'dust', t:'медленная взвесь', c:'#c9a86a', type:'rise'},
+    {n:'Рой', id:'swarm', t:'хаотичные точки', c:'#c6c6c6', type:'swarm'},
+    {n:'Водоворот', id:'vortex', t:'закрученные точки', c:'#6fb7e8', type:'vortex'},
+    {n:'Пыльца', id:'pollen', t:'парящие частицы', c:'#ffd66e', type:'wave'},
+    {n:'Хаос', id:'chaos', t:'беспорядочное движение', c:'#d86fe0', type:'chaos'},
+    {n:'Метеоры', id:'meteor', t:'падающие с хвостом', c:'#ff9d5a', type:'meteor'},
+    {n:'Тьма', id:'dark', t:'медленные клубы', c:'#5a5a6a', type:'drift'},
+    {n:'Эхо', id:'echo', t:'расплывающиеся круги', c:'#9aa7d8', type:'echo'},
+    {n:'Жертва', id:'blood', t:'красные кляксы', c:'#c8303f', type:'rise'},
+    {n:'Мечты', id:'dream', t:'мягкое свечение', c:'#d8c6ff', type:'rise'},
+    {n:'Грех', id:'sin', t:'алые точки', c:'#e0505a', type:'swarm'},
+    {n:'Пылающий', id:'brim', t:'вертикальные потоки', c:'#ff4d4d', type:'fire'},
+    {n:'Слёзы', id:'tears', t:'капли вверх-вниз', c:'#8fd0ff', type:'wave'},
+    {n:'Скелеты', id:'bone', t:'белые фрагменты', c:'#e8e0ce', type:'rise'},
+    {n:'Дух', id:'soul', t:'блёклые призраки', c:'#b8c8f0', type:'drift'},
+    {n:'Волны', id:'wave', t:'плавные колебания', c:'#5ab8e8', type:'wave'},
+    {n:'Молнии', id:'bolt', t:'вспышки линий', c:'#f5f06a', type:'bolt'},
+    {n:'Свечение', id:'glow', t:'светящиеся круги', c:'#ffec99', type:'glow'},
+    {n:'Летучие', id:'fly', t:'мельтешащие мухи', c:'#8aa04a', type:'swarm'},
+    {n:'Сущность', id:'essence', t:'прозрачные сферы', c:'#c8e0ff', type:'drift'},
+    {n:'Золотой', id:'gold', t:'золотые искры', c:'#ffd24a', type:'rise'},
+    {n:'Кристаллы', id:'crystal', t:'многогранные точки', c:'#9fe8ff', type:'snow'},
+    {n:'Туманы ада', id:'hell', t:'мрачный дым', c:'#7a3c3c', type:'drift'},
+    {n:'Розовый', id:'pink', t:'нежные частицы', c:'#ff9ad5', type:'bubbles'},
+    {n:'Абисс', id:'abyss', t:'тёмные провалы', c:'#4a3c6a', type:'drift'},
+    {n:'Небесный', id:'heaven', t:'светлые лучи', c:'#fff0c0', type:'rise'},
+    {n:'Лавовый', id:'lava', t:'пузырящаяся магма', c:'#ff7a2a', type:'bubbles'},
+    {n:'Ледяной', id:'ice', t:'медленные кристаллы', c:'#b8ecff', type:'snow'},
+    {n:'Ядовитый', id:'toxic', t:'зелёные испарения', c:'#8ae04a', type:'rise'},
+    {n:'Багровый', id:'crimson', t:'тёмные капли', c:'#c82450', type:'rain'},
+    {n:'Изумруд', id:'emerald', t:'зелёные искры', c:'#2ae08a', type:'rise'},
+    {n:'Сапфир', id:'sapphire', t:'синие точки', c:'#3c8ae0', type:'swarm'},
+    {n:'Рубин', id:'ruby', t:'красные частицы', c:'#e03040', type:'rise'},
+    {n:'Янтарь', id:'amber', t:'тёплые искры', c:'#ffb02a', type:'glow'},
+    {n:'Турмалин', id:'tourmaline', t:'разные цвета', c:'#e06ad8', type:'chaos'},
+    {n:'Опал', id:'opal', t:'переливы', c:'#e8d8ff', type:'drift'},
+    {n:'Оникс', id:'onyx', t:'чёрные угли', c:'#3c3c46', type:'rise'},
+    {n:'Перидот', id:'peridot', t:'жёлто-зелёные', c:'#c8e050', type:'wave'},
+    {n:'Аметист', id:'amethyst', t:'фиолетовые клубы', c:'#b06ae0', type:'drift'},
+    {n:'Топаз', id:'topaz', t:'золотистые точки', c:'#ffd080', type:'snow'},
+    {n:'Циркон', id:'zircon', t:'искрящиеся сферы', c:'#d0e8f8', type:'glow'}
   ];
   var curAnim=(function(){ try{ return localStorage.getItem(ANIM_KEY)||'stars'; }catch(e){ return 'stars'; } })();
   function seedByAnim(id){
-    var n=Math.round(cw/16), mode=id||'stars'; parts=[];
+    var mode=id||'stars', n=Math.round(cw/15); parts=[];
+    var spec=anims.filter(function(a){return a.id===mode;})[0]||anims[1];
+    var type=spec.type||'rise';
     for(var i=0;i<n;i++){
-      var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.2+Math.random()*0.5,tw:Math.random()*6.28,s:0.5+Math.random(),ang:Math.random()*6.28};
-      if(mode==='snow'){ p.vy=0.3+Math.random()*0.7; p.vx=(Math.random()-0.5)*0.3; p.r=1+Math.random()*2.8; }
-      else if(mode==='rain'){ p.vy=3+Math.random()*4; p.vx=0; p.r=1; }
-      else if(mode==='fire'){ p.vy=-(0.3+Math.random()*0.8); p.vx=(Math.random()-0.5)*0.3; p.r=1.5+Math.random()*2; }
-      else if(mode==='bubbles'){ p.vy=-(0.2+Math.random()*0.5); p.vx=(Math.random()-0.5)*0.15; p.r=1+Math.random()*2.2; }
-      else if(mode==='vortex'){ p.ang=Math.random()*6.28; p.vy=0; p.vx=0; p.s=0.2+Math.random()*1; p.r=1+Math.random()*2; }
-      else if(mode==='swarm'||mode==='fly'){ p.vy=(Math.random()-0.5)*0.6; p.vx=(Math.random()-0.5)*0.6; p.r=1+Math.random()*1.6; }
-      else if(mode==='wave'){ p.vy=0.15+Math.random()*0.3; p.vx=(Math.random()-0.5)*0.2; p.tw=Math.random()*6.28; p.r=1+Math.random()*2; }
-      else if(mode==='meteor'){ p.vy=1.5+Math.random()*2; p.vx=(0.3+Math.random()*0.8); p.r=1.5+Math.random()*1.5; }
-      else if(mode==='stars'||mode==='dust'||mode==='glow'||mode==='mist'){ p.vy=-(0.15+Math.random()*0.5); p.vx=(Math.random()-0.5)*0.2; }
-      else { p.vy=(Math.random()-0.5)*0.4; p.vx=(Math.random()-0.5)*0.4; }
+      var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.3+Math.random()*0.6,tw:Math.random()*6.28,s:0.2+Math.random()*1.4,ang:Math.random()*6.28,ph:Math.random()*6.28};
+      if(type==='snow'){ p.vy=0.3+Math.random()*0.9; p.vx=(Math.random()-0.5)*0.4; p.r=1+Math.random()*3; }
+      else if(type==='rain'){ p.vy=3.5+Math.random()*5; p.vx=(Math.random()-0.5)*0.5; p.r=1.2; }
+      else if(type==='fire'){ p.vy=-(0.4+Math.random()*1); p.vx=(Math.random()-0.5)*0.5; p.r=1.5+Math.random()*2.6; }
+      else if(type==='bubbles'){ p.vy=-(0.25+Math.random()*0.7); p.vx=(Math.random()-0.5)*0.3; p.r=1+Math.random()*3; }
+      else if(type==='vortex'){ p.vy=0; p.vx=0; p.s=0.1+Math.random()*1; p.r=1+Math.random()*2.4; }
+      else if(type==='swarm'){ p.vy=(Math.random()-0.5)*0.9; p.vx=(Math.random()-0.5)*0.9; p.tw=Math.random()*6.28; }
+      else if(type==='wave'){ p.vy=0.1+Math.random()*0.3; p.vx=(Math.random()-0.5)*0.25; p.r=1+Math.random()*2.4; }
+      else if(type==='meteor'){ p.vy=2+Math.random()*3; p.vx=(0.4+Math.random()*1.2); p.r=2+Math.random()*2; }
+      else if(type==='bolt'){ p.vy=0; p.vx=0; p.l=2+Math.random()*10; p.r=1; }
+      else if(type==='glow'){ p.vy=-(0.1+Math.random()*0.4); p.vx=(Math.random()-0.5)*0.15; p.r=2+Math.random()*3.5; }
+      else if(type==='echo'){ p.vy=-0.1; p.vx=0; p.s=0.4+Math.random()*0.6; p.r=1; }
+      else if(type==='drift'){ p.vy=(Math.random()-0.5)*0.5; p.vx=(Math.random()-0.5)*0.5; p.r=2+Math.random()*4; }
+      else if(type==='chaos'){ p.vy=(Math.random()-0.5)*1.4; p.vx=(Math.random()-0.5)*1.4; p.tw=Math.random()*6.28; }
+      else { p.vy=-(0.15+Math.random()*0.5); p.vx=(Math.random()-0.5)*0.2; } // rise
       parts.push(p);
     }
   }
   seedByAnim(curAnim);
+  function animColor(id){
+    var spec=anims.filter(function(a){return a.id===id;})[0]; if(!spec) return accentRBG;
+    var c=spec.c||'#fff'; return hexToRgb(c);
+  }
   function draw(){
     cx.clearRect(0,0,cw,ch);
-    var base=accentRBG, mode=curAnim;
+    var mode=curAnim, base=animColor(mode);
+    var spec=anims.filter(function(a){return a.id===mode;})[0]||{}, type=spec.type||'rise';
     for(var i=0;i<parts.length;i++){ var p=parts[i];
-      if(mode==='vortex'){ p.s+=0.01; p.x=cw/2+Math.cos(p.ang)*p.s*80; p.y=ch/2+Math.sin(p.ang)*p.s*80; p.ang+=0.01; }
-      else { p.y+=p.vy; p.x+=p.vx; p.tw+=0.02; }
-      if(mode==='rain'){ if(p.y>ch+6){ p.y=-6; p.x=Math.random()*cw; } if(p.x>cw+6)p.x=-6; }
+      if(type==='vortex'){ p.s+=0.012; p.ang+=0.012; p.x=cw/2+Math.cos(p.ang)*p.s*(Math.min(cw,ch)*0.5); p.y=ch/2+Math.sin(p.ang)*p.s*(Math.min(cw,ch)*0.5); }
+      else if(type==='echo'){ p.s+=0.008; p.r=p.s*8; p.a-=0.003; if(p.a<=0){ p.x=Math.random()*cw; p.y=Math.random()*ch; p.s=0.4; p.a=0.5; } }
+      else if(type==='bolt'){ if(Math.random()<0.02){ p.l=5+Math.random()*20; } p.x+=Math.random()*2-1; p.y+=Math.random()*2-1; }
+      else { p.y+=p.vy; p.x+=p.vx; p.tw+=0.03; }
+      if(type==='rain'){ if(p.y>ch+10){ p.y=-10; p.x=Math.random()*cw; } if(p.x>cw+10)p.x=-10; if(p.x<-10)p.x=cw+10; }
+      else if(type==='vortex'||type==='bolt'){ /* stay */ }
       else {
-        if(p.y<-10){ p.y=ch+10; p.x=Math.random()*cw; }
-        if(p.x<-10)p.x=cw+10; if(p.x>cw+10)p.x=-10;
+        if(p.y<-20){ p.y=ch+20; p.x=Math.random()*cw; }
+        if(p.x<-20)p.x=cw+20; if(p.x>cw+20)p.x=-20;
       }
-      var a=p.a*(0.6+0.4*Math.sin(p.tw));
-      if(mode==='rain'){ cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(p.x-1,p.y+9); cx.strokeStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.7).toFixed(3)+')'; cx.lineWidth=1; cx.stroke(); }
+      var a=p.a*(0.55+0.45*Math.sin(p.tw));
+      if(a<0)a=0; if(a>1)a=1;
+      if(type==='rain'){ cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(p.x-1.5*p.vx,p.y+14); cx.strokeStyle='rgba('+base.r+','+base.g+','+base.b+','+(0.5*a).toFixed(3)+')'; cx.lineWidth=1.4; cx.stroke(); }
+      else if(type==='bolt'){ cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(p.x+(Math.random()*16-8),p.y+14); cx.strokeStyle='rgba('+base.r+','+base.g+','+base.b+','+(0.6*a).toFixed(3)+')'; cx.lineWidth=1.5; cx.stroke(); }
       else {
         cx.beginPath(); cx.arc(p.x,p.y,p.r,0,6.2832);
         cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+a.toFixed(3)+')';
         cx.fill();
-        cx.beginPath(); cx.arc(p.x,p.y,p.r*3,0,6.2832);
-        cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.12).toFixed(3)+')';
+        cx.beginPath(); cx.arc(p.x,p.y,p.r*3.2,0,6.2832);
+        cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.16).toFixed(3)+')';
         cx.fill();
       }
     }
@@ -1808,8 +1864,9 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var g=document.getElementById('animGrid'); if(!g) return; g.innerHTML='';
     anims.forEach(function(a){
       var d=document.createElement('div'); d.className='theme-item'+(curAnim===a.id?' active':'');
-      d.title=a.t? a.n+' ('+a.t+')':a.n;
-      d.innerHTML='<div class="sw" style="background:linear-gradient(135deg,'+accentRBG.r+','+accentRBG.g+','+accentRBG.b+');"></div><div class="nm">'+a.n+'</div><div class="tt">'+a.t+'</div>';
+      d.title=a.n+(a.t?' — '+a.t:'');
+      var c=a.c||'#fff';
+      d.innerHTML='<div class="sw" style="background:'+c+';box-shadow:0 0 12px '+c+'66;"></div><div class="nm">'+a.n+'</div><div class="tt">'+a.t+'</div>';
       d.addEventListener('click',function(){ applyAnim(a.id); Array.from(g.children).forEach(function(x){x.classList.remove('active');}); d.classList.add('active'); });
       g.appendChild(d);
     });
@@ -1864,17 +1921,30 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   function renderItems(){
     var g=document.getElementById('itemGrid'); if(!g) return; g.innerHTML='';
     var q=((document.getElementById('itemSearch')||{}).value||'').toLowerCase();
+    var owned=(function(){ try{ return JSON.parse(localStorage.getItem('cain_items')||'[]'); }catch(e){ return []; } })();
+    var tally=document.getElementById('itemTally');
+    if(tally) tally.textContent='Собрано предметов: '+owned.length+' из '+ITEMS.length+((owned.length===ITEMS.length)?' 🏆 Всё собрано!':'');
     var list=ITEMS.filter(function(it){ return !q || it.n.toLowerCase().indexOf(q)>-1 || it.t.toLowerCase().indexOf(q)>-1 || it.e.toLowerCase().indexOf(q)>-1; });
     list.forEach(function(it){
-      var d=document.createElement('div'); d.className='theme-item item';
-      d.title=it.n+' — '+it.e;
-      d.innerHTML='<div class="sw" style="font-size:22px;display:flex;align-items:center;justify-content:center;">'+it.ic+'</div><div class="nm">'+it.n+'</div><div class="tt">'+it.e+'</div>';
+      var has=owned.indexOf(it.n)>-1;
+      var d=document.createElement('div'); d.className='theme-item item'+(has?' owned':'');
+      d.title=(has?'Собрано ✓ ':'Не собрано · кликни чтобы собрать')+' — '+it.n+' · '+it.e;
+      d.innerHTML='<div class="sw" style="font-size:22px;display:flex;align-items:center;justify-content:center;'+(has?'opacity:1':'opacity:.45')+';">'+it.ic+'</div><div class="nm">'+it.n+(has?' ✓':'')+'</div><div class="tt">'+it.e+'</div>';
+      d.addEventListener('click',function(){
+        var arr=(function(){ try{ return JSON.parse(localStorage.getItem('cain_items')||'[]'); }catch(e){ return []; } })();
+        var idx=arr.indexOf(it.n);
+        if(idx>-1) arr.splice(idx,1); else arr.push(it.n);
+        try{ localStorage.setItem('cain_items',JSON.stringify(arr)); }catch(e){}
+        renderItems();
+      });
       g.appendChild(d);
     });
     if(!list.length) g.innerHTML='<div style="padding:12px;color:var(--dim)">Ничего не найдено.</div>';
   }
   var itemSearch=document.getElementById('itemSearch');
   if(itemSearch) itemSearch.addEventListener('input',renderItems);
+  var itemReset=document.getElementById('itemReset');
+  if(itemReset) itemReset.addEventListener('click',function(){ if(confirm('Сбросить весь собранный набор предметов?')){ try{ localStorage.setItem('cain_items','[]'); }catch(e){} renderItems(); } });
   draw();
 
   /* ===== Обновление имени при смене темы ===== */
