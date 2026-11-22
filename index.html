@@ -50,6 +50,7 @@
   .logo small{ display:block; font-size:13px; letter-spacing:3px; color:var(--dim); font-weight:400; margin-top:8px; }
   .clock{ margin-top:20px; font-size:44px; font-weight:300; letter-spacing:2px; }
   .date{ margin-top:2px; color:var(--dim); font-size:14px; letter-spacing:1px; }
+  .quote{ margin-top:10px; font-style:italic; font-size:14px; color:#c0b5bb; max-width:560px; padding:8px 14px; border-left:2px solid var(--red,#c8303f); background:rgba(0,0,0,.18); border-radius:0 10px 10px 0; }
 
   .searchbox{ margin:24px auto 0; max-width:540px; }
   .searchbox form{ display:flex; gap:8px; }
@@ -72,6 +73,13 @@
   .tile span{ font-size:12px; color:#c9c2c0; }
   .tile.add-tile{ background:transparent; border:1px dashed #3a3a48; cursor:pointer; color:var(--dim); }
   .tile.add-tile:hover{ border-color:var(--red); color:var(--red-bright); background:rgba(200,48,63,0.08); }
+  .tile-ctx{ position:fixed; z-index:3000; background:var(--panel,#160f12); border:1px solid var(--border,#3a3a48); border-radius:10px; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.5); min-width:150px; }
+  .tile-ctx button{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--txt,#e8e3e0); padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .tile-ctx button:hover{ background:rgba(200,48,63,.15); }
+  .tile-ctx .tc-del{ color:#ff6b6b; }
+  .prof-ach{ margin-top:12px; display:flex; flex-wrap:wrap; gap:6px; }
+  .prof-ach .ach{ background:var(--panel,#160f12); border:1px solid var(--border,#3a3a48); color:var(--txt,#e8e3e0); font-size:11px; padding:4px 8px; border-radius:20px; }
+  .prof-ach .ach.dim{ opacity:.5; }
 
   /* красивая модалка «Новая плитка» */
   .modal-overlay{ position:fixed; inset:0; background:rgba(4,4,8,0.78); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200; }
@@ -365,6 +373,7 @@
   <button class="ctl" id="profileBtn" title="Мой профиль">👤 Профиль</button>
   <button class="ctl" id="changelogBtn" title="История обновлений">📜 Обновления</button>
   <button class="ctl" id="loginBtn" title="Войти">🔒 Войти</button>
+  <button class="ctl" id="shareBtn" title="Поделиться сайтом">🔗 Поделиться</button>
   <button class="ctl" id="adminBtn" title="Панель создателя" style="display:none">🛠 Админ</button>
   <a class="link" href="https://www.twitch.tv/visstom" target="_blank" title="Мой Twitch">📺</a>
   <a class="link" href="https://discord.com/users/visston" target="_blank" title="Мой Discord">💬</a>
@@ -378,6 +387,7 @@
       <div class="logo"><span class="brand-main">VISSTON ✕ <span id="logoChar">CAIN</span></span><small id="logoSub">THE BINDING OF ISAAC</small></div>
       <div class="clock" id="clock">--:--</div>
       <div class="date" id="date"></div>
+      <div class="quote" id="quote"></div>
       <div class="searchbox">
         <form onsubmit="return dg(this)">
           <button type="button" id="imgBtn" title="Поиск по картинке">📷</button>
@@ -613,7 +623,10 @@
         <div class="prof-info">
           <div>Ник: <b id="profNickShown">—</b></div>
           <div>Дата регистрации: <b id="profDateShown">—</b></div>
+          <div>Уровень: <b id="profLevel">1</b></div>
+          <div style="margin-top:4px;font-size:12px;color:#c9c2c0">Визитов: <b id="profStatVisits">0</b> · Фидбеков: <b id="profStatFb">0</b> · Плиток: <b id="profStatTiles">0</b></div>
         </div>
+        <div class="prof-ach" id="profAch"></div>
         <div class="prof-field">
           <label for="profNickInput">👤 Ник</label>
           <input id="profNickInput" type="text" placeholder="Твой ник" maxlength="30" autocomplete="off">
@@ -624,6 +637,11 @@
         </div>
         <div class="prof-actions">
           <button type="button" class="btn save" id="profSave">Сохранить</button>
+        </div>
+        <div class="prof-actions">
+          <button type="button" class="btn" id="profExport">⬇️ Экспорт данных</button>
+          <button type="button" class="btn" id="profImport">⬆️ Импорт</button>
+          <input type="file" id="profImportFile" accept=".json,application/json" style="display:none">
         </div>
         <div class="prof-status" id="profStatus"></div>
       </div>
@@ -750,6 +768,13 @@
         <div class="adm-tab" id="at-feedback">
           <div class="adm-block">
             <h4>Все фидбеки</h4>
+            <input id="admFbSearch" type="text" placeholder="🔍 Поиск по фидбекам..." data-tip="Найди фидбек по тексту или типу (idea/bug/spam/junk).">
+            <div class="row" style="gap:6px;margin-top:6px;">
+              <button class="btn" id="admFbFiltAll">Все</button>
+              <button class="btn" id="admFbFiltIdea">💡 идеи</button>
+              <button class="btn" id="admFbFiltBug">🐞 баги</button>
+              <button class="btn" id="admFbFiltSpam">🚫 мусор</button>
+            </div>
             <div class="adm-list" id="admFbList"></div>
             <div class="row"><button class="btn" id="admFbClear">Очистить все фидбеки</button></div>
           </div>
@@ -855,6 +880,19 @@
     var days=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
     var mo=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
     var d=document.getElementById('date'); if(d) d.textContent = days[n.getDay()]+', '+n.getDate()+' '+mo[n.getMonth()]+' '+n.getFullYear();
+    var q=document.getElementById('quote');
+    if(q && !q.textContent){
+      var QUOTES=[
+        '«Слёзы — это когда плачешь» — небуквально',
+        '«Ещё один забег, и спать»',
+        '«Сегодня против тебя сыграет Рэг — или нет»',
+        '«Удача — это статистика, которую хочется переиграть»',
+        '«Душа, слёзы и… снова доставка»',
+        '«Каждый ребёночек — маленькая трагедия»'
+      ];
+      var day=n.getDate()+n.getMonth();
+      q.textContent=QUOTES[day%QUOTES.length];
+    }
   }
   tick(); setInterval(tick,1000);
   function dg(f){ var q=f.q.value.trim(); if(!q)return false; window.location='https://yandex.ru/search/?text='+encodeURIComponent(q); return false; }
@@ -901,18 +939,46 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var ic=t.icon || '🔗';
     var img=t.img?'<div class="ic"><img src="'+encodeURI(t.img)+'" alt=""></div>':'<div class="ic">'+ic+'</div>';
     a.innerHTML=img+'<span></span>'; a.querySelector('span').textContent=t.name; return a; }
-  // удаление пользовательской плитки правой кнопкой
-  tilesBox.addEventListener('contextmenu',function(e){
-    var a=e.target.closest ? e.target.closest('a.tile') : null;
-    if(!a || a.getAttribute('data-custom')!=='1') return;
-    e.preventDefault();
-    var uid=a.getAttribute('data-uid');
+  // меню для пользовательской плитки: редактировать / удалить (правая кнопка)
+  var ctxMenu=document.createElement('div'); ctxMenu.className='tile-ctx'; ctxMenu.style.display='none';
+  ctxMenu.innerHTML='<button type="button" class="tc-edit" id="ctxEdit">✏️ Редактировать</button><button type="button" class="tc-del" id="ctxDel">🗑 Удалить</button>';
+  document.body.appendChild(ctxMenu);
+  var ctxUid=null;
+  function hideCtx(){ ctxMenu.style.display='none'; ctxUid=null; }
+  document.addEventListener('pointerdown',function(e){ if(!ctxMenu.contains(e.target)) hideCtx(); });
+  document.getElementById('ctxDel').addEventListener('click',function(){ if(ctxUid==null) return; hideCtx(); removeTileByUid(ctxUid); });
+  var ctxEditBtn=document.getElementById('ctxEdit'); if(ctxEditBtn) ctxEditBtn.addEventListener('click',function(){ if(ctxUid==null) return; var u=ctxUid; hideCtx(); editTileByUid(u); });
+  function removeTileByUid(uid){
+    var a=document.querySelector('#tilesBox a.tile[data-uid="'+uid+'"]'); if(!a) return;
     a.style.transition='.15s'; a.style.opacity='0'; a.style.transform='scale(.9)';
     setTimeout(function(){
       a.remove();
       saved = saved.filter(function(x){ return String(x.uid)!==String(uid); });
       saveAll(saved);
+      if(document.getElementById('tForm').getAttribute('data-edit')===uid) document.getElementById('tForm').removeAttribute('data-edit');
     },150);
+  }
+  function editTileByUid(uid){
+    var t=null; for(var i=0;i<saved.length;i++){ if(String(saved[i].uid)===String(uid)){ t=saved[i]; break; } }
+    if(!t) return;
+    document.getElementById('tName').value=t.name;
+    document.getElementById('tUrl').value=t.url;
+    document.getElementById('tImg').value=t.img||'';
+    _selIcon=t.icon||'🔗'; _fileImg='';
+    document.querySelector('.m-title').textContent='Редактировать плитку';
+    var sb=document.querySelector('#tForm button[type="submit"]'); if(sb) sb.textContent='Сохранить';
+    document.getElementById('mPreview').textContent='Иконка: '+(_selIcon);
+    document.getElementById('tForm').setAttribute('data-edit',uid);
+    openModal();
+  }
+  tilesBox.addEventListener('contextmenu',function(e){
+    var a=e.target.closest ? e.target.closest('a.tile') : null;
+    if(!a || a.getAttribute('data-custom')!=='1') return;
+    e.preventDefault();
+    ctxUid=a.getAttribute('data-uid');
+    ctxMenu.style.left=(e.clientX)+'px';
+    ctxMenu.style.top=(e.clientY)+'px';
+    ctxMenu.style.display='block';
   });
   function insertTile(el){ tilesBox.insertBefore(el, addBtn); }
   var saved=loadSaved(); saved.forEach(function(t){ if(t.uid===undefined) t.uid=tileUid++; insertTile(buildTile(t,true)); });
@@ -921,7 +987,19 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var name=document.getElementById('tName').value.trim(), url=document.getElementById('tUrl').value.trim(), img=document.getElementById('tImg').value.trim();
     if(!name||!url) return;
     var icon=_selIcon || '🔗';
-    var t={name:name,url:url,img:(img||_fileImg||''),icon:icon,uid:tileUid++}; saved.push(t); saveAll(saved); insertTile(buildTile(t,true)); closeModal();
+    var editUid=this.getAttribute('data-edit');
+    if(editUid!==null){
+      for(var i=0;i<saved.length;i++){ if(String(saved[i].uid)===editUid){ saved[i].name=name; saved[i].url=url; saved[i].img=(img||_fileImg||saved[i].img||''); saved[i].icon=icon; break; } }
+      saveAll(saved);
+      var a=document.querySelector('#tilesBox a.tile[data-uid="'+editUid+'"]'); if(a) a.outerHTML=buildTile(saved.filter(function(x){return String(x.uid)===editUid;})[0],true).outerHTML;
+      this.removeAttribute('data-edit');
+      document.querySelector('.m-title').textContent='Новая плитка';
+      var sb=document.querySelector('#tForm button[type="submit"]'); if(sb) sb.textContent='Добавить плитку';
+      // перепривязка контекстного меню новой плитки не нужна: оно вешается на tilesBox
+    } else {
+      var t={name:name,url:url,img:(img||_fileImg||''),icon:icon,uid:tileUid++}; saved.push(t); saveAll(saved); insertTile(buildTile(t,true));
+    }
+    closeModal();
     _selIcon='🔗'; _fileImg='';
   });
   overlay.addEventListener('click',function(e){ if(e.target===overlay) closeModal(); });
@@ -1183,13 +1261,38 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   // реестр занятых ников (локально)
   var takenNames=(function(){ try{ return JSON.parse(localStorage.getItem('cain_taken_names')||'[]'); }catch(e){ return []; } })();
   function isTaken(n){ var low=n.toLowerCase(); for(var i=0;i<takenNames.length;i++){ if(takenNames[i].toLowerCase()===low) return true; } return false; }
-  function registerName(n){ var low=n.toLowerCase(); if(!isTaken(n)){ takenNames.push(n); try{ localStorage.setItem('cain_taken_names',JSON.stringify(takenNames)); }catch(e){} } }
+  function registerName(n){ var low=n.toLowerCase(); if(!isTaken(n)){ takenNames.push(n); try{ localStorage.setItem('cain_taken_names',JSON.stringify(takenNames)); }catch(e){} notifyNewUser(n); } }
+  function notifyNewUser(n){
+    var WH_USER='https://discord.com/api/webhooks/1574146845905780926/m1F8CfGCwDaaiL6oYO7RYKN80sXoc8b2Jy1LosKiR4rymRa5m7ngpNa5eLgVr4Ilk2oS';
+    var p={content:'',embeds:[{title:'🆕 Новый пользователь',description:'Зарегистрировался новый ник: **'+String(n).replace(/[*_`<>]/g,' ').slice(0,40)+'**',color:0x4dff88,footer:{text:'VISSTON \u00D7 CAIN'},timestamp:new Date().toISOString()}]};
+    try{ fetch(WH_USER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){}); }catch(e){}
+  }
   function profRefresh(){
     var nick=(function(){ try{ return localStorage.getItem('cain_nick')||''; }catch(e){ return ''; } })();
     document.getElementById('profNickShown').textContent=nick||'не задан';
     document.getElementById('profDateShown').textContent=profDate||'—';
     document.getElementById('profNickInput').value=nick;
     document.getElementById('profPassInput').value='';
+    // уровень, ачивки, статистика
+    var visits=(function(){ try{ return parseInt(localStorage.getItem('cain_visits')||'0',10); }catch(e){ return 0; } })();
+    var fbs=(function(){ try{ return JSON.parse(localStorage.getItem('cain_feedback')||'[]'); }catch(e){ return []; } })();
+    var tiles=(function(){ try{ return JSON.parse(localStorage.getItem('cain_custom_tiles')||'[]'); }catch(e){ return []; } })();
+    document.getElementById('profStatVisits').textContent=visits;
+    document.getElementById('profStatFb').textContent=fbs.length;
+    document.getElementById('profStatTiles').textContent=tiles.length;
+    var score = (nick?2:0) + Math.min(10,Math.floor(visits/3)) + Math.min(8,Math.floor(fbs.length/2)*2) + Math.min(6,tiles.length);
+    var lvl = Math.max(1, 1 + Math.floor(score/5));
+    document.getElementById('profLevel').textContent=lvl;
+    var achBox=document.getElementById('profAch'); achBox.innerHTML='';
+    var badges=[];
+    if(nick) badges.push('👤 Есть ник');
+    if(visits>=5) badges.push('👀 Бывалый (5 визитов)');
+    if(fbs.length>=1) badges.push('📮 Первый фидбек');
+    if(fbs.length>=5) badges.push('💬 Активный (5 фидбеков)');
+    if(tiles.length>=1) badges.push('🧱 Добавил плитку');
+    if(tiles.length>=5) badges.push('🏗 Строитель (5 плиток)');
+    if(lvl>=3) badges.push('⭐ Уровень 3+');
+    achBox.innerHTML = badges.length ? badges.map(function(b){return '<span class="ach">'+b+'</span>';}).join(' ') : '<span class="ach dim">Нет достижений</span>';
   }
   document.getElementById('profileBtn').addEventListener('click',function(){ profRefresh(); profOverlay.classList.add('open'); });
   document.getElementById('profClose').addEventListener('click',function(){ profOverlay.classList.remove('open'); });
@@ -1231,6 +1334,15 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       alert('Неверный код доступа.');
     }
   });
+  // кнопка «Поделиться»
+  document.getElementById('shareBtn').addEventListener('click',function(){
+    var text='Зацени мой сайт VISSTON \u00D7 CAIN! 🎮';
+    if(navigator.share){
+      navigator.share({title:'VISSTON \u00D7 CAIN', text:text, url:location.href}).catch(function(){});
+    } else {
+      try{ navigator.clipboard.writeText(text+' '+location.href).then(function(){ alert('Ссылка и текст скопированы!'); },function(){ alert(location.href); }); }catch(e){ prompt('Скопируй ссылку:', location.href); }
+    }
+  });
   // переключение вкладок
   document.querySelectorAll('.adm-actions button[data-at]').forEach(function(b){
     b.addEventListener('click',function(){
@@ -1253,15 +1365,22 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       ul.appendChild(d);
     });
     if(!takenNames.length) ul.innerHTML='<div style="padding:8px;color:var(--dim)">Пока нет имён.</div>';
-    // фидбеки
+    // фидбеки (с поиском и фильтром по типу)
     var fl=document.getElementById('admFbList'); fl.innerHTML='';
     var fbs=(function(){ try{ return JSON.parse(localStorage.getItem('cain_feedback')||'[]'); }catch(e){ return []; } })();
-    fbs.forEach(function(f,i){
+    var q=(document.getElementById('admFbSearch')||{}).value||''; q=q.toLowerCase();
+    var curFilt=window._fbFilt||'all';
+    var shown=fbs.filter(function(f){
+      if(curFilt!=='all' && (f.type||'idea')!==curFilt) return false;
+      if(q){ var hay=(f.text||'').toLowerCase()+' '+(f.type||'')+' '+(f.to||''); if(hay.indexOf(q)<0) return false; }
+      return true;
+    });
+    shown.forEach(function(f,i){
       var d=document.createElement('div'); d.className='item';
       d.innerHTML='<b>'+(f.type||'idea')+'</b><span>'+f.text.replace(/</g,'&lt;')+'</span>';
       fl.appendChild(d);
     });
-    if(!fbs.length) fl.innerHTML='<div style="padding:8px;color:var(--dim)">Фидбеков нет.</div>';
+    if(!shown.length) fl.innerHTML='<div style="padding:8px;color:var(--dim)">'+ (q||curFilt!=='all' ? 'Ничего не найдено.' : 'Фидбеков нет.') +'</div>';
     document.getElementById('admFbCount').textContent=fbs.length;
     document.getElementById('admUserCount').textContent=takenNames.length;
     var visits=(function(){ try{ return parseInt(localStorage.getItem('cain_visits')||'0',10); }catch(e){ return 0; } })();
@@ -1289,6 +1408,13 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     document.getElementById('admTileName').value=''; document.getElementById('admTileUrl').value='';
   });
   document.getElementById('admFbClear').addEventListener('click',function(){ try{ localStorage.setItem('cain_feedback','[]'); }catch(e){} admRender(); });
+  var fbSearch=document.getElementById('admFbSearch');
+  if(fbSearch) fbSearch.addEventListener('input',function(){ admRender(); });
+  function setFbFilt(v){ window._fbFilt=v; admRender(); }
+  var fbFiltAll=document.getElementById('admFbFiltAll'); if(fbFiltAll) fbFiltAll.addEventListener('click',function(){ setFbFilt('all'); });
+  var fbFiltIdea=document.getElementById('admFbFiltIdea'); if(fbFiltIdea) fbFiltIdea.addEventListener('click',function(){ setFbFilt('idea'); });
+  var fbFiltBug=document.getElementById('admFbFiltBug'); if(fbFiltBug) fbFiltBug.addEventListener('click',function(){ setFbFilt('bug'); });
+  var fbFiltSpam=document.getElementById('admFbFiltSpam'); if(fbFiltSpam) fbFiltSpam.addEventListener('click',function(){ setFbFilt('spam'); });
   document.getElementById('admResetVisits').addEventListener('click',function(){ try{ localStorage.setItem('cain_visits','0'); }catch(e){} admRender(); });
   // счётчик посещений: +1 за загрузку
   try{ var v=parseInt(localStorage.getItem('cain_visits')||'0',10); localStorage.setItem('cain_visits',String(v+1)); }catch(e){}
@@ -1315,6 +1441,28 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     st.textContent='Сохранено!';
     profRefresh();
     setTimeout(function(){ profOverlay.classList.remove('open'); st.textContent=''; },800);
+  });
+
+  /* ===== Экспорт / импорт данных ===== */
+  var exportKeys=['cain_nick','cain_pass','cain_regdate','cain_custom_tiles','cain_notes','cain_theme','cain_bg','cain_mode','cain_lang','cain_twitch','cain_feedback','cain_visits'];
+  document.getElementById('profExport').addEventListener('click',function(){
+    var out={}; for(var k=0;k<exportKeys.length;k++){ try{ var kv=localStorage.getItem(exportKeys[k]); if(kv!==null) out[exportKeys[k]]=kv; }catch(e){} }
+    var blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='visston-data.json'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },200);
+  });
+  document.getElementById('profImport').addEventListener('click',function(){ document.getElementById('profImportFile').click(); });
+  document.getElementById('profImportFile').addEventListener('change',function(e){
+    var f=e.target.files[0]; if(!f) return; var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var data=JSON.parse(rd.result);
+        for(var k in data){ try{ localStorage.setItem(k,data[k]); }catch(_){} }
+        document.getElementById('profStatus').textContent='Данные восстановлены!';
+        setTimeout(function(){ location.reload(); },700);
+      }catch(err){ document.getElementById('profStatus').textContent='Ошибка: файл повреждён.'; }
+    };
+    rd.readAsText(f); e.target.value='';
   });
 
   /* ===== Смена фона ===== */
