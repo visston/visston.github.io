@@ -1524,8 +1524,9 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     });
   });
   function admRender(){
-    // пользователи
-    var ul=document.getElementById('admUserList'); ul.innerHTML='';
+    // пользователи — всегда свежие данные из localStorage
+    takenNames=(function(){ try{ return JSON.parse(localStorage.getItem('cain_taken_names')||'[]'); }catch(e){ return []; } })();
+    var ul=document.getElementById('admUserList'); if(!ul) return; ul.innerHTML='';
     takenNames.forEach(function(n){
       var d=document.createElement('div'); d.className='item'; d.innerHTML='👤 <b>'+n.replace(/</g,'&lt;')+'</b><button>✕</button>';
       d.querySelector('button').addEventListener('click',function(){
@@ -1924,7 +1925,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     {n:'Опал', id:'opal', t:'переливы', c:'#e8d8ff', type:'petal'},
     {n:'Оникс', id:'onyx', t:'чёрные угли', c:'#3c3c46', type:'cross'},
     {n:'Перидот', id:'peridot', t:'жёлто-зелёные', c:'#c8e050', type:'wave'},
-    {n:'Аметист', id:'amethyst', t:'фиолетовые клубы', c:'#b06ae0', type:'drift'},
+    {n:'Аметист', id:'amethyst', t:'фиол. кристаллы падают и разбиваются', c:'#b06ae0', type:'shard'},
     {n:'Топаз', id:'topaz', t:'золотистые точки', c:'#ffd080', type:'snow'},
     {n:'Циркон', id:'zircon', t:'искрящиеся сферы', c:'#d0e8f8', type:'glow'}
   ];
@@ -1948,6 +1949,8 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       else if(type==='glow'){ p.vy=-(0.1+Math.random()*0.4); p.vx=(Math.random()-0.5)*0.15; p.r=2+Math.random()*3.5; }
       else if(type==='echo'){ p.vy=-0.1; p.vx=0; p.s=0.4+Math.random()*0.6; p.r=1; }
       else if(type==='drift'){ p.vy=(Math.random()-0.5)*0.5; p.vx=(Math.random()-0.5)*0.5; p.r=2+Math.random()*4; }
+      else if(type==='shard'){ // кристалл: падает, потом разбивается (осколки разлетаются)
+        p.vy=1.5+Math.random()*2.2; p.vx=(Math.random()-0.5)*1.2; p.r=2+Math.random()*3; p.shards=[]; p.shat=0; p.rot=Math.random()*6.28; p.vr=(Math.random()-0.5)*0.2; p.falling=true; }
       else if(type==='chaos'){ p.vy=(Math.random()-0.5)*1.4; p.vx=(Math.random()-0.5)*1.4; p.tw=Math.random()*6.28; }
       else { p.vy=-(0.15+Math.random()*0.5); p.vx=(Math.random()-0.5)*0.2; } // rise
       parts.push(p);
@@ -1997,9 +2000,35 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath(); cx.fill();
       return;
     }
-    if(type==='fire'){ // костёр/пламя снизу: языки
+    if(type==='fire'){ // красивое живое пламя: внутренний жёлто-белый язык + внешнее свечение + искры вверх
       sceneT+=0.05;
-      for(var f=0;f<10;f++){ var fx=f*120+40; var fh=40+Math.abs(Math.sin(sceneT*2+f))*50; cx.beginPath(); cx.moveTo(fx-30,ch); cx.quadraticCurveTo(fx-fh*0.4,ch-fh*0.6,fx-10,ch-fh); cx.quadraticCurveTo(fx,ch-fh+18,fx+10,ch-fh); cx.quadraticCurveTo(fx+fh*0.4,ch-fh*0.6,fx+30,ch); cx.closePath(); cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+','+(0.28+0.22*Math.abs(Math.sin(sceneT*2+f))).toFixed(3)+')'; cx.fill(); }
+      // ореол-свечение по низу
+      var fg=cx.createLinearGradient(0,ch,0,ch*0.7);
+      fg.addColorStop(0,'rgba('+Math.min(255,b.r|0)+','+Math.min(255,b.g*0.5|0)+',40,0.35)');
+      fg.addColorStop(1,'rgba('+b.r+','+b.g+','+b.b+',0)');
+      cx.fillStyle=fg; cx.fillRect(0,ch*0.7,cw,ch*0.3);
+      var flames=8;
+      for(var f=0;f<flames;f++){
+        var fx=(f+0.5)*cw/flames+(Math.sin(sceneT*3+f*1.7)*18);
+        var fh=55+Math.abs(Math.sin(sceneT*2.2+f*1.3))*65;
+        var fw=34+Math.abs(Math.sin(sceneT*2.8+f))*14;
+        // внешний язык (красный/оранжевый)
+        cx.beginPath(); cx.moveTo(fx-fw,ch);
+        cx.quadraticCurveTo(fx-fw*0.5,ch-fh*0.7,fx,ch-fh);
+        cx.quadraticCurveTo(fx+fw*0.5,ch-fh*0.7,fx+fw,ch);
+        cx.closePath();
+        cx.fillStyle='rgba('+Math.min(255,b.r|0)+','+Math.min(255,b.g*0.6|0)+',50,'+(0.4+0.25*Math.sin(sceneT*4+f)).toFixed(3)+')'; cx.fill();
+        // внутренний язык (бело-жёлтый)
+        var fh2=fh*0.55;
+        cx.beginPath(); cx.moveTo(fx-fw*0.4,ch);
+        cx.quadraticCurveTo(fx-fw*0.2,ch-fh2*0.7,fx,ch-fh2);
+        cx.quadraticCurveTo(fx+fw*0.2,ch-fh2*0.7,fx+fw*0.4,ch);
+        cx.closePath();
+        cx.fillStyle='rgba(255,'+Math.min(255,b.g*0.9|0)+',140,0.75)'; cx.fill();
+      }
+      // взлетающие искры
+      cx.fillStyle='rgba(255,220,140,'+(0.5+0.4*Math.sin(sceneT*6)).toFixed(3)+')';
+      for(var sp2=0;sp2<6;sp2++){ var sx=(Math.sin(sceneT*5+sp2*2)*0.5+0.5)*cw; var sy=ch-((sceneT*120+sp2*70)%(ch*0.5))-10; cx.beginPath(); cx.arc(sx,sy,(sceneT*3+sp2)%4+1.2,0,6.2832); cx.fill(); }
       return;
     }
     if(type==='rain'){ // ливень: лужа снизу и разводы
@@ -2039,6 +2068,14 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       if(type==='vortex'){ p.s+=0.012; p.ang+=0.012; p.x=cw/2+Math.cos(p.ang)*p.s*(Math.min(cw,ch)*0.5); p.y=ch/2+Math.sin(p.ang)*p.s*(Math.min(cw,ch)*0.5); }
       else if(type==='echo'){ p.s+=0.008; p.r=p.s*8; p.a-=0.003; if(p.a<=0){ p.x=Math.random()*cw; p.y=Math.random()*ch; p.s=0.4; p.a=0.5; } }
       else if(type==='bolt'){ if(Math.random()<0.02){ p.l=5+Math.random()*20; } p.x+=Math.random()*2-1; p.y+=Math.random()*2-1; }
+      else if(type==='shard'){
+        p.rot=(p.rot||0)+(p.vr||0);
+        if(p.falling){ p.y+=p.vy; p.x+=p.vx; p.vy+=0.15; p.vx*=0.99; if(p.y>=ch-30){ p.falling=false; p.shat=0.3; } }
+        else {
+          p.shat+=0.02;
+          if(p.shat>1){ p.shat=0; p.x=Math.random()*(cw-40)+20; p.y=-20; p.vy=1.5+Math.random()*2; p.vx=(Math.random()-0.5)*1; p.falling=true; }
+        }
+      }
       else { p.y+=p.vy; p.x+=p.vx; p.tw+=0.03; }
       if(type==='rain'){ if(p.y>ch+10){ p.y=-10; p.x=Math.random()*cw; } if(p.x>cw+10)p.x=-10; if(p.x<-10)p.x=cw+10; }
       else if(type==='vortex'||type==='bolt'){ /* stay */ }
@@ -2061,6 +2098,21 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       if(type==='bubbles'){ // пузырь с ободком
         cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.4; cx.stroke();
         cx.beginPath(); cx.arc(-p.r*0.3,-p.r*0.3,p.r*0.25,0,6.2832); cx.fillStyle='rgba(255,255,255,'+(a*0.7).toFixed(3)+')'; cx.fill(); cx.restore(); continue;
+      }
+if(type==='shard'){
+        if(p.falling){
+          cx.rotate(p.rot||0);
+          cx.beginPath(); for(var sh=0;sh<6;sh++){ var an=sh*Math.PI/3; var rr=sh%2? p.r:p.r*0.7; if(sh===0)cx.moveTo(Math.cos(an)*rr,Math.sin(an)*rr); else cx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr); } cx.closePath();
+          cx.fillStyle=col; cx.fill();
+          cx.strokeStyle='rgba(255,255,255,'+(a*0.5).toFixed(3)+')'; cx.lineWidth=1; cx.stroke();
+        } else if(p.shat<0.85){
+          cx.rotate(p.rot||0);
+          if(!p.shards){
+            p.shards=[]; for(var o=0;o<7;o++){ var ang=(o/7)*6.2832+Math.random(); p.shards.push({a:ang,d:(1+Math.random()*2.5)*8}); }
+          }
+          for(var oi=0;oi<p.shards.length;oi++){ var s2=p.shards[oi]; var dx=Math.cos(s2.a)*s2.d*p.shat, dy=Math.sin(s2.a)*s2.d*p.shat + p.shat*p.shat*40; cx.beginPath(); cx.moveTo(dx-2,dy-1); cx.lineTo(dx-1,dy+2); cx.lineTo(dx+3,dy+1); cx.closePath(); cx.fillStyle=col; cx.fill(); }
+        }
+        cx.restore(); continue;
       }
       if(type==='fish'){
         // рыбка: тело + хвост + плавник, идёт в сторону p.dir
@@ -2447,18 +2499,32 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     'Bumbino':'c','Colostomia':'s','The Shell':'b','Turdlet':'c','Raglich':'s','Dogma':'l','The Beast':'w','Horny Boys':'c',
     'Clutch':'b','Cadavra':'s'
   };
+  var bossImgCache={};
+  function loadBossImg(boss, cb){
+    var url=BOSS_IMG[boss.n];
+    if(!url || !/https?:|\/?bosses\//.test(url)) return cb(null);
+    if(bossImgCache[url]) return cb(bossImgCache[url]);
+    var im=new Image();
+    im.onload=function(){ bossImgCache[url]=im; cb(im); };
+    im.onerror=function(){ bossImgCache[url]=null; cb(null); };
+    im.src=url;
+  }
+  function startBoss(fxInit){
+    var f=fxInit; bossFx=f;
+    f.img=null;
+    loadBossImg(f.b,function(im){ if(bossFx===f) f.img=im; });
+    try{ localStorage.setItem('cain_boss',f.b.n); }catch(e){}
+  }
   function placeBoss(boss){
     // босс рисуется на заднем фоне через canvas с фазами: появление → атака → вторая форма → уход
-    bossFx={ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.35 };
-    try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
+    startBoss({ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.35 });
   }
   function placeBossHover(boss){
     // при наведении — короткая атака на фоне, с защитой от спама
     var now=Date.now();
     if(now-(bossHoverTm||0)<600) return;
     bossHoverTm=now;
-    bossFx={ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.3, hover:true };
-    try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
+    startBoss({ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.3, hover:true });
   }
   function drawBoss(){
     var f=bossFx; if(!f) return;
@@ -2501,26 +2567,30 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       if(f.attackTimer>2.2){ f.phase='leave'; }
     }
     else if(f.phase==='leave'){ f.scale-=0.05; if(f.scale<=0){ f.scale=0; bossFx=null; return; } }
-    // тело
+    // тело: реальный спрайт из игры (локальный/присланный или CDN), фолбэк на emoji
     var s=f.scale;
     cx.save(); cx.translate(cx0,cy0); cx.scale(s,s);
-    // головной блок — упрощённое тело босса
-    var col=f.form2?'rgba(200,40,40,0.9)':'rgba('+c.r+','+c.g+','+c.b+',0.9)';
-    cx.beginPath(); cx.arc(0,0,size*0.4,0,6.2832);
-    cx.fillStyle=col; cx.fill();
-    cx.lineWidth=4; cx.strokeStyle='rgba(0,0,0,0.6)'; cx.stroke();
-    // глаза
-    cx.beginPath(); cx.arc(-size*0.13,-size*0.05,size*0.1,0,6.2832); cx.fillStyle='#fff'; cx.fill();
-    cx.beginPath(); cx.arc(size*0.13,-size*0.05,size*0.1,0,6.2832); cx.fillStyle='#fff'; cx.fill();
-    cx.beginPath(); cx.arc(-size*0.13,-size*0.05,size*0.045,0,6.2832); cx.fillStyle='#000'; cx.fill();
-    cx.beginPath(); cx.arc(size*0.13,-size*0.05,size*0.045,0,6.2832); cx.fillStyle='#000'; cx.fill();
-    // рот во время атаки
-    if(f.phase==='attack' && f.t%0.4<0.2){
-      cx.beginPath(); cx.arc(0,size*0.18,size*0.22,0,Math.PI); cx.fillStyle='#400'; cx.fill();
+    var sw=size*1.3, sh=size*1.3;
+    if(f.img && f.img.width){
+      // лёгкое покачивание во время атаки
+      var bob = (f.phase==='attack') ? Math.sin(f.t*10)*size*0.04 : 0;
+      if(f.phase==='attack') cx.rotate(Math.sin(f.t*10)*0.05);
+      cx.drawImage(f.img, -sw/2, -sh/2+bob, sw, sh);
+    } else if(boss.e){
+      // фолбэк: emoji босса
+      cx.font=(size*0.9)+'px Georgia';
+      cx.textAlign='center'; cx.textBaseline='middle';
+      cx.fillText(boss.e, 0, 0);
+    } else {
+      // фолбэк: цветной круг
+      var col=f.form2?'rgba(200,40,40,0.9)':'rgba('+c.r+','+c.g+','+c.b+',0.9)';
+      cx.beginPath(); cx.arc(0,0,size*0.4,0,6.2832); cx.fillStyle=col; cx.fill();
     }
-    // лёгкое свечение
-    cx.beginPath(); cx.arc(0,0,size*0.5,0,6.2832);
-    cx.fillStyle='rgba('+c.r+','+c.g+','+c.b+',0.12)'; cx.fill();
+    // лёгкое свечение позади босса
+    cx.globalAlpha=0.12;
+    cx.beginPath(); cx.arc(0,0,size*0.75,0,6.2832);
+    cx.fillStyle='rgba('+c.r+','+c.g+','+c.b+',1)'; cx.fill();
+    cx.globalAlpha=1;
     cx.restore();
     // статус-подпись
     cx.font=Math.max(12,Math.min(18,cw*0.014))+'px Georgia';
