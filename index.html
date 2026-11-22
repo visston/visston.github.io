@@ -1141,7 +1141,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       var reason = badHit ? '🚫 Спам/оскорбление' : '🗑 Мусор (не подходит)';
       var msg = badHit ? 'Сообщение содержит оскорбления и отправлено в мусор.' : 'Сообщение не похоже на предложение или баг и отправлено в мусор.';
       status.textContent=msg;
-      var sp=buildPayload(reason,'0x808080',text);
+      var sp=buildPayload(reason,0x808080,text);
       post(WH_SPAM,sp).then(function(){ setTimeout(function(){ fbOverlay.classList.remove('open'); status.textContent=''; },2600); });
       try{ var arr2=JSON.parse(localStorage.getItem('cain_feedback')||'[]'); arr2.push({type: badHit?'spam':'junk', text:text, at:new Date().toISOString(), to:'spam'}); localStorage.setItem('cain_feedback',JSON.stringify(arr2)); }catch(e){}
       document.getElementById('fbText').value='';
