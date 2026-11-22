@@ -153,6 +153,10 @@
   .theme-item .tt{ font-size:10px; color:var(--dim); }
   .theme-item.active{ border-color:var(--gold); outline:2px solid var(--gold-dim); }
   .theme-grid.items{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
+  .theme-grid.bosses{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+  .boss-fx{ transition:transform .5s ease,opacity .5s ease; transform:scale(.1); opacity:0; filter:drop-shadow(0 0 24px rgba(0,0,0,.6)); line-height:1; }
+  .boss-fx.in{ transform:scale(1); opacity:.92; }
+  .boss-fx.out{ transform:scale(2.2) rotate(20deg); opacity:0; }
   .theme-item.item .nm{ font-size:11px; line-height:1.2; }
   .theme-item.item .tt{ font-size:9px; line-height:1.3; word-break:break-word; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
   .item-tally{ margin-bottom:12px; font-size:13px; color:var(--gold); font-weight:600; text-align:center; }
@@ -518,6 +522,7 @@
         <button type="button" class="on" data-tab="themes">🎨 Темы</button>
         <button type="button" data-tab="anims">✨ Анимации</button>
         <button type="button" data-tab="items">💎 Предметы</button>
+        <button type="button" data-tab="bosses">👹 Боссы</button>
       </div>
       <div class="theme-panel" id="tp-themes">
         <div class="theme-grid" id="themeGrid"></div>
@@ -530,6 +535,12 @@
         <div class="item-tally" id="itemTally"></div>
         <div class="theme-grid items" id="itemGrid"></div>
         <div class="row"><button id="itemReset">Сбросить сбор</button></div>
+      </div>
+      <div class="theme-panel" id="tp-bosses" style="display:none">
+        <input id="bossSearch" type="text" placeholder="🔍 Поиск босса..." autocomplete="off">
+        <div class="item-tally" id="bossTally"></div>
+        <div class="theme-grid bosses" id="bossGrid"></div>
+        <div class="row"><button id="bossHide">Скрыть босса с экрана</button></div>
       </div>
       <div class="theme-close"><button id="themeClose">Готово</button></div>
     </div>
@@ -1188,7 +1199,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     });
   }
   var themeOverlay=document.getElementById('themeOverlay');
-  document.getElementById('themeBtn').addEventListener('click',function(){ themeOverlay.classList.add('open'); renderThemes(); renderAnims(); renderItems(); });
+  document.getElementById('themeBtn').addEventListener('click',function(){ themeOverlay.classList.add('open'); renderThemes(); renderAnims(); renderItems(); renderBosses(); });
   document.getElementById('themeClose').addEventListener('click',function(){ themeOverlay.classList.remove('open'); });
   themeOverlay.addEventListener('click',function(e){ if(e.target===themeOverlay) themeOverlay.classList.remove('open'); });
   // переключение вкладок Темы/Анимации/Предметы
@@ -1945,6 +1956,66 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   if(itemSearch) itemSearch.addEventListener('input',renderItems);
   var itemReset=document.getElementById('itemReset');
   if(itemReset) itemReset.addEventListener('click',function(){ if(confirm('Сбросить весь собранный набор предметов?')){ try{ localStorage.setItem('cain_items','[]'); }catch(e){} renderItems(); } });
+
+  /* ===== Каталог боссов Isaac ===== */
+  var BOSSES=[
+    {n:'Monstro', t:'Монстро', d:'Большой кашляющий монстр основной игры.', e:'monstro', c:'#9c5a4a'},
+    {n:'Mega Maw', t:'Мега Мав', d:'Гигантское существо, стреляющее слёзами и прыгающее.', e:'mega', c:'#7a4a3a'},
+    {n:'Chub', t:'Чаб', d:'Червь-босс, ползающий по комнате и плюющийся.', e:'chub', c:'#5a8a4a'},
+    {n:'Cursed', t:'Проклятый', d:'Босс, меняющий форму и выпускающий проклятые слёзы.', e:'cursed', c:'#6a5a8a'},
+    {n:'Gurdy', t:'Герди', d:'Мясной узел, стреляющий врагами и сжимающийся.', e:'gurdy', c:'#8a4a5a'},
+    {n:'Monstro II', t:'Монстро II', d:'Улучшенная версия Монстро с телепортацией.', e:'monstro2', c:'#6a7a8a'},
+    {n:'The Haunt', t:'Призрак', d:'Дух, появляющийся из маленьких призраков, избегающий урона.', e:'haunt', c:'#6a8a8a'},
+    {n:'Pestilence', t:'Мор', d:'Первый всадник Апокалипсиса, стреляющий ядом.', e:'pest', c:'#6a7a3a'},
+    {n:'Famine', t:'Голод', d:'Всадник Апокалипсиса, преследующий игрока.', e:'famine', c:'#8a6a3a'},
+    {n:'War', t:'Война', d:'Всадник Апокалипсиса на коне с огромным уроном.', e:'war', c:'#8a3a3a'},
+    {n:'Death', t:'Смерть', d:'Всадник Апокалипсиса с косой.', e:'death', c:'#5a5a5a'},
+    {n:'The Lamb', t:'Агнец', d:'Финал-босс, отбрасывающий шипы и стреляющий.', e:'lamb', c:'#8a5a8a'},
+    {n:'Mega Satan', t:'Мега Сатана', d:'Финальный босс, большая форма Сатаны.', e:'megasatan', c:'#5a2a2a'},
+    {n:'Satan', t:'Сатана', d:'Классический босс с шипованными руками.', e:'satan', c:'#7a2a3a'},
+    {n:'Isaac', t:'Исаак', d:'Финальный босс, зеркальный противник.', e:'isaac', c:'#c8c8c8'},
+    {n:'Blue Baby', t:'Синий малыш', d:'Альтернативный финал, плачущий слёзами.', e:'blue', c:'#6a9ab0'},
+    {n:'Mom', t:'Мама', d:'Огромная мать, топающая по комнате.', e:'mom', c:'#8a3a5a'},
+    {n:'Mom\'s Heart', t:'Мамино сердце', d:'Пульсирующее сердце, выпускающее врагов.', e:'heart', c:'#c8303f'},
+    {n:'It Lives', t:'Оно живёт', d:'Деформированное сердце, стреляющее во все стороны.', e:'itlives', c:'#a03040'},
+    {n:'Greed', t:'Жадность', d:'Босс, призывающий деньги и монеты-врагов.', e:'greed', c:'#c8a030'},
+    {n:'Bloat', t:'Вздутие', d:'Летающий босс, стреляющий печалью и шипами.', e:'bloat', c:'#8a8a3a'},
+    {n:'The Wretched', t:'Жалкий', d:'Босс, роняющий слёзы и детёнышей.', e:'wretch', c:'#6a8a6a'},
+    {n:'Rag Man', t:'Тряпичный человек', d:'Шьёт из кусков себя маленьких врагов.', e:'rag', c:'#8a6a6a'},
+    {n:'Reap Creep', t:'Пугало', d:'Мини-босс, рассыпающий красные кресты.', e:'reap', c:'#7a3a3a'},
+    {n:'Dark One', t:'Тёмный', d:'Летающий босс, создающий кольца тьмы.', e:'dark', c:'#3a3a4a'}
+  ];
+  function placeBoss(boss){
+    var el=document.createElement('div');
+    el.className='boss-fx';
+    el.innerHTML=boss.e;
+    el.title=boss.n+' — '+boss.d;
+    var s=el.style;
+    s.position='fixed'; s.zIndex='9999'; s.fontSize=(110+Math.random()*90)+'px';
+    s.left=(8+Math.random()*60)+'vw'; s.top=(18+Math.random()*45)+'vh';
+    s.pointerEvents='none'; s.userSelect='none';
+    document.body.appendChild(el);
+    setTimeout(function(){ el.classList.add('in'); }, 20);
+    var life=3000; setTimeout(function(){ el.classList.add('out'); var t=el; setTimeout(function(){ t.remove(); },600); }, life);
+    try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
+  }
+  function renderBosses(){
+    var g=document.getElementById('bossGrid'); if(!g) return; g.innerHTML='';
+    var q=((document.getElementById('bossSearch')||{}).value||'').toLowerCase();
+    var list=BOSSES.filter(function(b){ return !q || b.n.toLowerCase().indexOf(q)>-1 || b.d.toLowerCase().indexOf(q)>-1 || b.t.toLowerCase().indexOf(q)>-1; });
+    list.forEach(function(b){
+      var d=document.createElement('div'); d.className='theme-item item';
+      d.title=b.n+' — '+b.d;
+      d.innerHTML='<div class="sw" style="font-size:24px;display:flex;align-items:center;justify-content:center;color:'+b.c+';">'+b.e+'</div><div class="nm">'+b.n+'</div><div class="tt">'+b.t+'</div>';
+      d.addEventListener('click',function(){ placeBoss(b); });
+      g.appendChild(d);
+    });
+    if(!list.length) g.innerHTML='<div style="padding:12px;color:var(--dim)">Ничего не найдено.</div>';
+  }
+  var bossSearch=document.getElementById('bossSearch');
+  if(bossSearch) bossSearch.addEventListener('input',renderBosses);
+  var bossHide=document.getElementById('bossHide');
+  if(bossHide) bossHide.addEventListener('click',function(){ Array.prototype.forEach.call(document.querySelectorAll('.boss-fx'),function(el){ el.classList.add('out'); setTimeout(function(){el.remove();},600); }); });
   draw();
 
   /* ===== Обновление имени при смене темы ===== */
