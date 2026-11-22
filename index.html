@@ -364,6 +364,7 @@
   </select>
   <button class="ctl" id="profileBtn" title="Мой профиль">👤 Профиль</button>
   <button class="ctl" id="changelogBtn" title="История обновлений">📜 Обновления</button>
+  <button class="ctl" id="loginBtn" title="Вход в панель создателя">🔒 Войти</button>
   <button class="ctl" id="adminBtn" title="Панель создателя" style="display:none">🛠 Админ</button>
   <a class="link" href="https://www.twitch.tv/visstom" target="_blank" title="Мой Twitch">📺</a>
   <a class="link" href="https://discord.com/users/visston" target="_blank" title="Мой Discord">💬</a>
@@ -1192,11 +1193,26 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   if(adminBtn) adminBtn.addEventListener('click',function(){ admOverlay.classList.add('open'); admRender(); });
   document.getElementById('admClose').addEventListener('click',function(){ admOverlay.classList.remove('open'); });
   admOverlay.addEventListener('click',function(e){ if(e.target===admOverlay) admOverlay.classList.remove('open'); });
-  // ввод кода: скрытая кнопка открывает окно кода, если не авторизован
-  if(adminBtn) adminBtn.addEventListener('dblclick',function(){
-    if(admAuthed) return;
-    var code=prompt('Введите код создателя:');
-    if(code===ADMIN_CODE){ try{ localStorage.setItem('cain_admin','1'); }catch(e){} admAuthed=true; adminBtn.style.display='inline-block'; }
+  // ввод кода: видимая кнопка «Войти» появляется, если не авторизован; админ-кнопка только авторизованным
+  var loginBtn=document.getElementById('loginBtn');
+  if(loginBtn && admAuthed){ loginBtn.style.display='none'; }
+  if(loginBtn) loginBtn.addEventListener('click',function(){
+    var code=prompt('Введите код доступа панели создателя:');
+    // доступ только если ник профиля = Visston И код верный
+    var curNick=(function(){ try{ return (localStorage.getItem('cain_nick')||'').trim(); }catch(e){ return ''; } })();
+    var nickOk = (curNick.toLowerCase()==='visston');
+    if(code && code===ADMIN_CODE && nickOk){
+      try{ localStorage.setItem('cain_admin','1'); }catch(e){}
+      admAuthed=true;
+      if(adminBtn) adminBtn.style.display='inline-block';
+      if(loginBtn) loginBtn.style.display='none';
+      admOverlay.classList.add('open'); admRender();
+      alert('Добро пожаловать, создатель!');
+    } else if(!nickOk){
+      alert('Доступ только для владельца (ник Visston). Чтобы продолжить, задай в профиле ник Visston.');
+    } else {
+      alert('Неверный код доступа.');
+    }
   });
   // переключение вкладок
   document.querySelectorAll('.adm-actions button[data-at]').forEach(function(b){
