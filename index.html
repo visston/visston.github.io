@@ -413,7 +413,7 @@
           <input id="q" type="text" placeholder="Поиск..." autocomplete="off">
           <button>Найти</button>
         </form>
-        <div class="hint">Enter — Яндекс · Alt+G — Google · позади 📷 — поиск по картинке</div>
+        <div class="hint" id="searchHint">Enter — Яндекс · Alt+G — Google · позади 📷 — поиск по картинке</div>
       </div>
       <div class="toolbar">
         <button type="button" id="lastBtn" title="Последнее открытое">🕘 <span id="lastLbl">Последнее</span></button>
@@ -433,18 +433,18 @@
     </div>
 
     <section class="notes">
-      <h3>📝 Мои заметки</h3>
+      <h3 id="notesTitle">📝 Мои заметки</h3>
       <textarea id="noteBox" placeholder="Запиши что-нибудь — сохранение автоматическое прямо в браузере..."></textarea>
       <div class="row"><span id="noteStatus">Всё сохраняется автоматически</span></div>
-      <div class="note-tip">Доступно локально. Если сайт выложен в интернет, каждый хранит свои заметки у себя в браузере.</div>
+      <div class="note-tip" id="noteTip">Доступно локально. Если сайт выложен в интернет, каждый хранит свои заметки у себя в браузере.</div>
     </section>
 
     <section class="section">
-      <h2>О сайте</h2>
+      <h2 id="aboutTitle">О сайте</h2>
       <div class="cards">
-        <div class="card"><h3>⚔ Cain</h3><p>Любимый персонаж из Isaac — на сайте настроена его тёмно-золотая тема по умолчанию.</p></div>
-        <div class="card"><h3>🎨 Темы</h3><p>Переключай оформление под всех персонажей и их Проклятых версий — кнопка «Темы».</p></div>
-        <div class="card"><h3>🌙 Удобство</h3><p>Ночной режим, смена фона и заметки — чтобы было приятно проводить тут время.</p></div>
+        <div class="card"><h3 id="cardCain">⚔ Cain</h3><p id="cardCainP">Любимый персонаж из Isaac — на сайте настроена его тёмно-золотая тема по умолчанию.</p></div>
+        <div class="card"><h3 id="cardThemes">🎨 Темы</h3><p id="cardThemesP">Переключай оформление под всех персонажей и их Проклятых версий — кнопка «Темы».</p></div>
+        <div class="card"><h3 id="cardComfort">🌙 Удобство</h3><p id="cardComfortP">Ночной режим, смена фона и заметки — чтобы было приятно проводить тут время.</p></div>
       </div>
     </section>
   </div>
@@ -905,7 +905,23 @@
     'chat_ph':['Спроси что угодно...','Ask anything...'],
     'chat_ai':'VISSTON AI',
     'add_btn':['Добавить','Add'],
-    'add_tile':['Новая плитка','New tile']
+    'add_tile':['Новая плитка','New tile'],
+    'notes_title':['📝 Мои заметки','📝 My notes'],
+    'notes_ph':['Запиши что-нибудь — сохранение автоматическое прямо в браузере...','Write something — saved automatically in your browser...'],
+    'notes_status':['Всё сохраняется автоматически','Everything saves automatically'],
+    'notes_tip':['Доступно локально. Каждый хранит свои заметки у себя в браузере.','Stored locally. Each person keeps their own notes in their browser.'],
+    'about_title':['О сайте','About'],
+    'card_cain':['⚔ Cain','⚔ Cain'],
+    'card_cain_p':['Любимый персонаж из Isaac — на сайте настроена его тёмно-золотая тема по умолчанию.','Favorite Isaac character — the site defaults to his dark-gold theme.'],
+    'card_themes':['🎨 Темы','🎨 Themes'],
+    'card_themes_p':['Переключай оформление под всех персонажей и их Проклятых версий — кнопка «Темы».','Switch the look between all characters and their Tainted versions — the Themes button.'],
+    'card_comfort':['🌙 Удобство','🌙 Comfort'],
+    'card_comfort_p':['Ночной режим, смена фона и заметки — чтобы было приятно проводить тут время.','Night mode, backgrounds and notes — so it is pleasant to spend time here.'],
+    'search_hint':['Enter — Яндекс · Alt+G — Google · позади 📷 — поиск по картинке','Enter — Yandex · Alt+G — Google · 📷 behind — image search'],
+    'last':['Последнее','Recent'],
+    'close':['Закрыть','Close'],
+    'theme_title':['🎨 Оформление','🎨 Customize'],
+    'theme_sub':['Темы, фоновые анимации и предметы Isaac','Themes, background animations and Isaac items']
   };
   var curLang = (function(){ try{ return localStorage.getItem('cain_lang')||'ru'; }catch(e){ return 'ru'; } })();
   function T(key){ var a=LANG_TR[key]||[key]; return a[0].length&&curLang==='en'&&a[1]? a[1] : a[0]; }
@@ -919,8 +935,21 @@
     var tb=document.querySelector('.searchbox button'); if(tb) tb.textContent=T('search_go');
     var ci=document.getElementById('chatInput'); if(ci) ci.placeholder=T('chat_ph');
     var li=document.getElementById('nightLbl'); if(li) li.textContent=T('night');
+    function setTxt(id,k){ var e=document.getElementById(id); if(e) e.textContent=T(k); }
+    setTxt('notesTitle','notes_title');
+    var nb=document.getElementById('noteBox'); if(nb) nb.placeholder=T('notes_ph');
+    setTxt('noteStatus','notes_status');
+    setTxt('noteTip','notes_tip');
+    setTxt('aboutTitle','about_title');
+    setTxt('cardCain','card_cain'); setTxt('cardCainP','card_cain_p');
+    setTxt('cardThemes','card_themes'); setTxt('cardThemesP','card_themes_p');
+    setTxt('cardComfort','card_comfort'); setTxt('cardComfortP','card_comfort_p');
+    setTxt('searchHint','search_hint');
+    setTxt('lastLbl','last');
     document.getElementById('langSel').value=curLang;
     try{ localStorage.setItem('cain_lang',curLang); }catch(e){}
+    var tBtn=document.getElementById('themeBtn');
+    if(tBtn || true){ }
   }
   function tick(){
     var n=new Date();
@@ -1718,31 +1747,34 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   }
   function drawTry(text,attempt,note){
     var wait=addMsg('ai', note||'Рисую…'); setBusy(true);
-    var seed=Math.floor(Math.random()*1000000);
-    // параметры: чуть больше разрешение и усиленный промпт под стиль сайта
-    var promptText = text.length>200 ? text.slice(0,200) : text;
-    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(promptText)+'?width=640&height=480&seed='+seed+'&nologo=true';
+    // стабильный seed из текста, чтобы одно описание -> похожая картинка
+    var seed=0; var s=text||''; for(var si=0;si<s.length;si++){ seed=(seed*31+s.charCodeAt(si))>>>0; } seed=seed%1000000;
+    // усиливаем промпт: явный стиль и качество, а не сырой текст
+    var userText=text.length>300? text.slice(0,300) : text;
+    var styleHints='highly detailed digital art, vibrant colors, sharp focus, clear composition, anime-gaming style';
+    // если пользователь не указал стиль — добавляем наш; иначе просто передаём его описание
+    var promptText = userText + '. ' + styleHints;
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(promptText)+'?width=832&height=624&seed='+seed+'&model=flux&nologo=true&noip=true';
+    // популярная и более качественная модель flux; параметры задаём выше
     var img=document.createElement('img');
     img.style.maxWidth='100%'; img.style.borderRadius='10px'; img.style.marginTop='4px';
     img.alt='сгенерированная картинка';
     var done=false;
     function flagOrFail(msg){
       if(done) return; done=true;
-      // лимит/ошибка — пробуем ещё до 3 раз с паузой, затем понятное сообщение
       if(attempt<=3){
         var pause = attempt*4000;
         wait.textContent='Обработка… (попытка '+attempt+', подожди)';
         setTimeout(function(){ wait.remove(); drawTry(text,attempt+1,'Перерисовываю…'); }, pause);
       } else {
         wait.className='msg err';
-        wait.textContent='Сервис генерации временно перегружен или действует лимит. Подожди ~минуту и попробуй снова — или добавь промпт (например «стиль аниме»).';
+        wait.textContent='Сервис генерации временно перегружен или действует лимит. Подожди ~минуту и попробуй снова.';
         setBusy(false);
       }
     }
     img.onload=function(){ if(done) return; done=true; wait.textContent=''; wait.appendChild(img); setBusy(false); chatInput.focus(); };
     img.onerror=function(){ flagOrFail(); };
-    // таймаут: если за 45с не прошло — считаем сбоем и пробуем снова
-    setTimeout(function(){ if(!done){ flagOrFail(); } }, 45000);
+    setTimeout(function(){ if(!done){ flagOrFail(); } }, 50000);
     img.src=url;
   }
   if(chatImgBtn) chatImgBtn.addEventListener('click',genImage);
@@ -1865,6 +1897,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
         cx.fill();
       }
     }
+    drawBoss();
     raf=requestAnimationFrame(draw);
   }
   function applyAnim(id){
@@ -1959,45 +1992,157 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
 
   /* ===== Каталог боссов Isaac ===== */
   var BOSSES=[
-    {n:'Monstro', t:'Монстро', d:'Большой кашляющий монстр основной игры.', e:'monstro', c:'#9c5a4a'},
-    {n:'Mega Maw', t:'Мега Мав', d:'Гигантское существо, стреляющее слёзами и прыгающее.', e:'mega', c:'#7a4a3a'},
-    {n:'Chub', t:'Чаб', d:'Червь-босс, ползающий по комнате и плюющийся.', e:'chub', c:'#5a8a4a'},
-    {n:'Cursed', t:'Проклятый', d:'Босс, меняющий форму и выпускающий проклятые слёзы.', e:'cursed', c:'#6a5a8a'},
-    {n:'Gurdy', t:'Герди', d:'Мясной узел, стреляющий врагами и сжимающийся.', e:'gurdy', c:'#8a4a5a'},
-    {n:'Monstro II', t:'Монстро II', d:'Улучшенная версия Монстро с телепортацией.', e:'monstro2', c:'#6a7a8a'},
-    {n:'The Haunt', t:'Призрак', d:'Дух, появляющийся из маленьких призраков, избегающий урона.', e:'haunt', c:'#6a8a8a'},
-    {n:'Pestilence', t:'Мор', d:'Первый всадник Апокалипсиса, стреляющий ядом.', e:'pest', c:'#6a7a3a'},
-    {n:'Famine', t:'Голод', d:'Всадник Апокалипсиса, преследующий игрока.', e:'famine', c:'#8a6a3a'},
-    {n:'War', t:'Война', d:'Всадник Апокалипсиса на коне с огромным уроном.', e:'war', c:'#8a3a3a'},
-    {n:'Death', t:'Смерть', d:'Всадник Апокалипсиса с косой.', e:'death', c:'#5a5a5a'},
-    {n:'The Lamb', t:'Агнец', d:'Финал-босс, отбрасывающий шипы и стреляющий.', e:'lamb', c:'#8a5a8a'},
-    {n:'Mega Satan', t:'Мега Сатана', d:'Финальный босс, большая форма Сатаны.', e:'megasatan', c:'#5a2a2a'},
-    {n:'Satan', t:'Сатана', d:'Классический босс с шипованными руками.', e:'satan', c:'#7a2a3a'},
-    {n:'Isaac', t:'Исаак', d:'Финальный босс, зеркальный противник.', e:'isaac', c:'#c8c8c8'},
-    {n:'Blue Baby', t:'Синий малыш', d:'Альтернативный финал, плачущий слёзами.', e:'blue', c:'#6a9ab0'},
-    {n:'Mom', t:'Мама', d:'Огромная мать, топающая по комнате.', e:'mom', c:'#8a3a5a'},
-    {n:'Mom\'s Heart', t:'Мамино сердце', d:'Пульсирующее сердце, выпускающее врагов.', e:'heart', c:'#c8303f'},
-    {n:'It Lives', t:'Оно живёт', d:'Деформированное сердце, стреляющее во все стороны.', e:'itlives', c:'#a03040'},
-    {n:'Greed', t:'Жадность', d:'Босс, призывающий деньги и монеты-врагов.', e:'greed', c:'#c8a030'},
-    {n:'Bloat', t:'Вздутие', d:'Летающий босс, стреляющий печалью и шипами.', e:'bloat', c:'#8a8a3a'},
-    {n:'The Wretched', t:'Жалкий', d:'Босс, роняющий слёзы и детёнышей.', e:'wretch', c:'#6a8a6a'},
-    {n:'Rag Man', t:'Тряпичный человек', d:'Шьёт из кусков себя маленьких врагов.', e:'rag', c:'#8a6a6a'},
-    {n:'Reap Creep', t:'Пугало', d:'Мини-босс, рассыпающий красные кресты.', e:'reap', c:'#7a3a3a'},
-    {n:'Dark One', t:'Тёмный', d:'Летающий босс, создающий кольца тьмы.', e:'dark', c:'#3a3a4a'}
+    {n:'Monstro', t:'Клетка 1', d:'Большой кашляющий монстр, прыгает и стреляет слёзами.', e:'😈', c:'#9c5a4a'},
+    {n:'Larry Jr.', t:'Клетка 1', d:'Сегментированный червь, ползающий по комнате.', e:'🐛', c:'#7a7a4a'},
+    {n:'Chub', t:'Клетка 1', d:'Толстый червь, плюётся слёзами и прыгает.', e:'🐍', c:'#5a8a4a'},
+    {n:'Duke of Flies', t:'Клетка 1', d:'Король мух, призывает рои насекомых.', e:'🪰', c:'#6a6a3a'},
+    {n:'Gurdy', t:'Клетка 1.5', d:'Мясной узел, стреляющий врагами и сжимающийся.', e:'🫀', c:'#8a4a5a'},
+    {n:'Peep', t:'Клетка 1.5', d:'Летучий глаз с большими руками, прыгает по комнате.', e:'👁️', c:'#8a8a3a'},
+    {n:'Loki', t:'Клетка 1.5', d:'Четырёхликий босс, стреляющий в 4 стороны.', e:'👹', c:'#9a6a4a'},
+    {n:'Blastocyst', t:'Клетка 1.5', d:'Делится на части и призывает мусор.', e:'🦠', c:'#6a8a5a'},
+    {n:'Monstro II', t:'Клетка 1.5', d:'Улучшенный Монстро, телепортируется и стреляет.', e:'👾', c:'#6a7a8a'},
+    {n:'Mom', t:'Клетка 2', d:'Огромная мать, топающая ногами по комнате.', e:'🦶', c:'#8a3a5a'},
+    {n:'Scolex', t:'Клетка 2', d:'Червь-босс, выпрыгивающий из-под земли по сегментам.', e:'🐉', c:'#5a7a3a'},
+    {n:'Famine', t:'Всадник', d:'Всадник Апокалипсиса, преследует игрока на коне.', e:'🐴', c:'#8a6a3a'},
+    {n:'Pestilence', t:'Всадник', d:'Всадник, стреляющий кольцами слёз.', e:'🤒', c:'#6a7a3a'},
+    {n:'War', t:'Всадник', d:'Всадник на коне с огромным уроном.', e:'⚔️', c:'#8a3a3a'},
+    {n:'Death', t:'Всадник', d:'Всадник с косой, призывающий воронов.', e:'💀', c:'#5a5a5a'},
+    {n:"Mom's Heart", t:'Клетка 2', d:'Пульсирующее сердце, выпускающее врагов.', e:'❤️', c:'#c8303f'},
+    {n:'It Lives!', t:'Клетка 2', d:'Деформированное сердце, стреляющее во все стороны.', e:'🫀', c:'#a03040'},
+    {n:'The Fallen', t:'Дьявол', d:'Босс комнаты дьявола, стреляет шипами.', e:'👿', c:'#7a2a3a'},
+    {n:'Satan', t:'Дьявол', d:'Классический босс с шипованными руками.', e:'😈', c:'#8a1a2a'},
+    {n:'The Lamb', t:'Агнец', d:'Финал-босс, отбрасывающий шипы и стреляющий.', e:'🐑', c:'#8a5a8a'},
+    {n:'Mega Satan', t:'Финал', d:'Огромная финальная форма Сатаны.', e:'😈', c:'#4a1a1a'},
+    {n:'Isaac', t:'Финал', d:'Финальный босс, зеркальный противник.', e:'👦', c:'#c8c8c8'},
+    {n:'???', t:'Финал', d:'Синий малыш, финальный босс.', e:'👶', c:'#6a9ab0'},
+    {n:'Gemini', t:'Клетка 1', d:'Два босса: один пассивный, второй темен.', e:'♊', c:'#8a6a7a'},
+    {n:'Fistula', t:'Клетка 1', d:'Разделяющийся мясистый шар.', e:'🔴', c:'#a04a3a'},
+    {n:'Gish', t:'Клетка 1', d:'Земляной босс, стреляющий каплями.', e:'🟤', c:'#7a5a3a'},
+    {n:'Steven', t:'Клетка 1', d:'Летающий малыш, стреляющий шипами.', e:'👶', c:'#b0a08a'},
+    {n:'C.H.A.D.', t:'Клетка 1', d:'Червь, выпрыгивающий из колец.', e:'🐛', c:'#6a8a4a'},
+    {n:'Headless Horseman', t:'Клетка 1.5', d:'Всадник без головы, атакует серпом.', e:'⚰️', c:'#7a7a5a'},
+    {n:'The Hollow', t:'Клетка 2', d:'Сегментированный коричневый червь.', e:'🪱', c:'#5a4a3a'},
+    {n:'The Carrion Queen', t:'Клетка 2', d:'Червь, выпрыгивающий целиком.', e:'🐍', c:'#5a6a3a'},
+    {n:'Gurdy Jr.', t:'Клетка 2', d:'Маленький мясистый босс, прыгает.', e:'🟠', c:'#9a5a4a'},
+    {n:'The Husk', t:'Клетка 2', d:'Крылатый трёхликий босс.', e:'👁️', c:'#6a5a4a'},
+    {n:'The Bloat', t:'Клетка 2', d:'Летучий глаз, стреляет шипами и печалью.', e:'👁️', c:'#8a8a3a'},
+    {n:'Mega Fatty', t:'Клетка 2', d:'Жирный монстр, плюётся врагами.', e:'🐷', c:'#a06a5a'},
+    {n:'The Cage', t:'Клетка 3', d:'Крикливая тварь в замке, атакует ногами.', e:'🔒', c:'#8a6a5a'},
+    {n:'Mama Gurdy', t:'Клетка 3', d:'Гигантское тело с венчиком, стреляет.', e:'🐙', c:'#a04a4a'},
+    {n:'Dark One', t:'Клетка 3', d:'Летающий босс, создающий кольца тьмы.', e:'🌑', c:'#3a3a4a'},
+    {n:'The Adversary', t:'Клетка 3', d:'Демон, стреляющий тремя шипами.', e:'👺', c:'#7a2a3a'},
+    {n:'Polycephalus', t:'Клетка 3', d:'Скорпионный босс с множеством глаз.', e:'🦂', c:'#5a5a6a'},
+    {n:'Mr. Fred', t:'Клетка 3', d:'Монстр, плюющийся ядовитыми каплями.', e:'🐸', c:'#6a7a4a'},
+    {n:'The Widow', t:'Клетка 2', d:'Паучиха, прыгающая и плетущая паутину.', e:'🕷️', c:'#4a4a5a'},
+    {n:'Pin', t:'Клетка 2', d:'Червь, скрывающийся под землёй.', e:'🪱', c:'#7a5a4a'},
+    {n:'Conquest', t:'Всадник', d:'Всадник Апокалипсиса, второй из всадников.', e:'🏇', c:'#8a5a3a'},
+    {n:'The Haunt', t:'Клетка 1.5', d:'Дух, появляющийся из маленьких призраков.', e:'👻', c:'#6a8a8a'},
+    {n:'Dingle', t:'Клетка 1.5', d:'Зелёная тварь, плюётся ядом.', e:'🦎', c:'#6a8a4a'},
+    {n:'Daddy Long Legs', t:'Клетка 2', d:'Триахиид, давящий ногами.', e:'🕷️', c:'#4a4a6a'},
+    {n:'Triachnid', t:'Клетка 2', d:'Многоногое существо.', e:'🕸️', c:'#4a4a5a'},
+    {n:'Mask of Infamy', t:'Клетка 3', d:'Маска с телом, защищающим её.', e:'🎭', c:'#8a5a5a'},
+    {n:'The Wretched', t:'Клетка 3', d:'Летающий босс, стреляющий печалью.', e:'😿', c:'#6a8a6a'},
+    {n:'The Gate', t:'Клетка 3', d:'Ворота, стреляющие лазерами.', e:'🚪', c:'#5a2a3a'},
+    {n:'Gurglings', t:'Клетка 3', d:'Ползающая тварь, разделяющаяся.', e:'🦠', c:'#6a6a4a'},
+    {n:'The Stain', t:'Afterbirth', d:'Красное пятно, стреляющее залпами.', e:'🔴', c:'#a03040'},
+    {n:'Brownie', t:'Afterbirth', d:'Король изображает Бога, делится.', e:'👑', c:'#8a6a3a'},
+    {n:'The Forsaken', t:'Afterbirth', d:'Демон, превращающийся в его стадию.', e:'👺', c:'#7a3a4a'},
+    {n:'Little Horn', t:'Afterbirth', d:'Демон, стреляющий шипами и прыгает.', e:'🐐', c:'#6a3a3a'},
+    {n:'Rag Man', t:'Afterbirth', d:'Шьёт из кусков себя маленьких врагов.', e:'🧵', c:'#8a6a6a'},
+    {n:'Ultra Greed', t:'Afterbirth', d:'Жадность, призывает монеты-врагов и ящеров.', e:'💰', c:'#c8a030'},
+    {n:'Hush', t:'Afterbirth', d:'Финальный босс с тремя фазами.', e:'🤫', c:'#4a5a8a'},
+    {n:'Dangle', t:'Afterbirth', d:'Разделяющийся червь.', e:'🪱', c:'#5a7a4a'},
+    {n:'The Frail', t:'Afterbirth', d:'Летучий скелет-босс.', e:'💀', c:'#c8c8c8'},
+    {n:'Rag Mega', t:'Afterbirth+', d:'Сшивает себя заново, зовёт детёнышей.', e:'🧟', c:'#8a6a5a'},
+    {n:'Sisters Vis', t:'Afterbirth+', d:'Три демона-сестры.', e:'💃', c:'#8a4a6a'},
+    {n:'Big Horn', t:'Afterbirth+', d:'Козёл в шлеме, стреляет дробью.', e:'🐐', c:'#6a3a3a'},
+    {n:'Delirium', t:'Afterbirth+', d:'Сливается с другими боссами, финал.', e:'🌀', c:'#3a3a5a'},
+    {n:'Ultra Greedier', t:'Afterbirth+', d:'Усиленная Жадность.', e:'🪙', c:'#d8b040'},
+    {n:'The Matriarch', t:'Afterbirth+', d:'Матриарх, стреляет врагами.', e:'🐝', c:'#8a5a3a'},
+    {n:'The Pile', t:'Repentance', d:'Куча тел, разделяющаяся.', e:'🫠', c:'#6a5a4a'},
+    {n:'Reap Creep', t:'Repentance', d:'Пугало, рассыпающее кресты.', e:'🌾', c:'#7a3a3a'},
+    {n:'Beelzeblub', t:'Repentance', d:'Король мух, призывает рои.', e:'🐝', c:'#6a6a3a'},
+    {n:'Wormwood', t:'Repentance', d:'Босс-жук, прыгающий и делящийся.', e:'🪲', c:'#5a6a3a'},
+    {n:'The Rainmaker', t:'Repentance', d:'Громовой босс, стреляющий лазерами.', e:'🌧️', c:'#4a6a9a'},
+    {n:'Tuff Twins', t:'Repentance', d:'Два каменных близнеца.', e:'🗿', c:'#7a7a7a'},
+    {n:'The Heretic', t:'Repentance', d:'Еретик с крыльями, стреляет огнём.', e:'🔥', c:'#7a2a3a'},
+    {n:'Hornfel', t:'Repentance', d:'Босс с красными глазами, телепортируется.', e:'👹', c:'#8a4a4a'},
+    {n:'Great Gideon', t:'Repentance', d:'Огромный куб, призывающий монстров.', e:'📦', c:'#6a4a3a'},
+    {n:'Baby Plum', t:'Repentance', d:'Малыш на облаке, стреляет соплями.', e:'🌸', c:'#b06a8a'},
+    {n:'The Scourge', t:'Repentance', d:'Всадник из Advents, стреляющий лучом.', e:'🌞', c:'#d8a030'},
+    {n:'Chimera', t:'Repentance', d:'Химера, объединяющая трёх существ.', e:'🐗', c:'#6a5a8a'},
+    {n:'Mother', t:'Repentance', d:'Финальная битва с матерью (несколько фаз).', e:'🦹‍♀️', c:'#a04a5a'},
+    {n:'Min-Min', t:'Repentance', d:'Босс альтернативной клетки, длинная шея.', e:'🧟', c:'#5a7a6a'},
+    {n:'Clog', t:'Repentance', d:'Плачущий монстр, разделяющийся на капли.', e:'🫧', c:'#5a6a8a'},
+    {n:'Singe', t:'Repentance', d:'Огненный босс, взрывающийся.', e:'🔥', c:'#d85a2a'},
+    {n:'Bumbino', t:'Repentance', d:'Бумбино — поедающий босс.', e:'🐻', c:'#8a7a5a'},
+    {n:'Colostomia', t:'Repentance', d:'Мешковатый босс, выпускающий врагов.', e:'🦠', c:'#7a5a5a'},
+    {n:'The Shell', t:'Repentance', d:'Краб с панцирем, стреляет.', e:'🦀', c:'#8a4a3a'},
+    {n:'Turdlet', t:'Repentance', d:'Фекальный босс.', e:'💩', c:'#6a5a3a'},
+    {n:'Raglich', t:'Repentance', d:'Скелет, собирающий себя из костей.', e:'💀', c:'#c8c0a0'},
+    {n:'Dogma', t:'Repentance', d:'Финал-босс света и ТВ-проповедник.', e:'📺', c:'#e8e0a0'},
+    {n:'The Beast', t:'Repentance', d:'Финальный босс на спине.', e:'🐲', c:'#7a2a4a'},
+    {n:'Horny Boys', t:'Repentance', d:'Группа рогатых демонов.', e:'👹', c:'#8a3a3a'},
+    {n:'Clutch', t:'Repentance', d:'Синий скелет-босс.', e:'🦴', c:'#5a6a9a'},
+    {n:'Cadavra', t:'Repentance', d:'Труп, разделяющийся на конечности.', e:'🧟', c:'#8a5a4a'}
   ];
+  var bossFx=null;
   function placeBoss(boss){
-    var el=document.createElement('div');
-    el.className='boss-fx';
-    el.innerHTML=boss.e;
-    el.title=boss.n+' — '+boss.d;
-    var s=el.style;
-    s.position='fixed'; s.zIndex='9999'; s.fontSize=(110+Math.random()*90)+'px';
-    s.left=(8+Math.random()*60)+'vw'; s.top=(18+Math.random()*45)+'vh';
-    s.pointerEvents='none'; s.userSelect='none';
-    document.body.appendChild(el);
-    setTimeout(function(){ el.classList.add('in'); }, 20);
-    var life=3000; setTimeout(function(){ el.classList.add('out'); var t=el; setTimeout(function(){ t.remove(); },600); }, life);
+    // босс рисуется на заднем фоне через canvas с фазами: появление → атака → вторая форма → уход
+    bossFx={ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.35 };
     try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
+  }
+  function drawBoss(){
+    var f=bossFx; if(!f) return;
+    f.t+=0.016; var boss=f.b;
+    var c=hexToRgb(boss.c||'#888888');
+    // координаты центра
+    var cx0=cw*f.x, cy0=ch*f.y;
+    var size=Math.min(cw,ch)*0.16;
+    if(f.phase==='enter'){ f.scale+=0.04; if(f.scale>=1){ f.scale=1; f.phase='attack'; f.attackTimer=0; } }
+    else if(f.phase==='attack'){
+      f.attackTimer+=0.016;
+      // пульсация / атака
+      if(f.t%3>2.86){ // вспышка
+        cx.arc(cx0,cy0,size*0.6,0,6.2832);
+        cx.fillStyle='rgba('+c.r+','+c.g+','+c.b+',0.35)'; cx.fill();
+      }
+      if(f.attackTimer>2.2){ f.phase=f.form2?'leave':'form2'; f.form2=true; f.attackTimer=0; }
+    }
+    else if(f.phase==='form2'){
+      f.attackTimer+=0.016;
+      if(f.t%2>1.86){ // вторая форма — красная вспышка и «шипы»
+        for(var sp=0;sp<8;sp++){ var a=sp*Math.PI/4; cx.beginPath(); cx.moveTo(cx0+Math.cos(a)*size*0.5,cy0+Math.sin(a)*size*0.5); cx.lineTo(cx0+Math.cos(a)*size*0.8,cy0+Math.sin(a)*size*0.8); cx.strokeStyle='rgba(255,60,60,0.6)'; cx.lineWidth=3; cx.stroke(); }
+      }
+      if(f.attackTimer>2.2){ f.phase='leave'; }
+    }
+    else if(f.phase==='leave'){ f.scale-=0.05; if(f.scale<=0){ f.scale=0; bossFx=null; return; } }
+    // тело
+    var s=f.scale;
+    cx.save(); cx.translate(cx0,cy0); cx.scale(s,s);
+    // головной блок — упрощённое тело босса
+    var col=f.form2?'rgba(200,40,40,0.9)':'rgba('+c.r+','+c.g+','+c.b+',0.9)';
+    cx.beginPath(); cx.arc(0,0,size*0.4,0,6.2832);
+    cx.fillStyle=col; cx.fill();
+    cx.lineWidth=4; cx.strokeStyle='rgba(0,0,0,0.6)'; cx.stroke();
+    // глаза
+    cx.beginPath(); cx.arc(-size*0.13,-size*0.05,size*0.1,0,6.2832); cx.fillStyle='#fff'; cx.fill();
+    cx.beginPath(); cx.arc(size*0.13,-size*0.05,size*0.1,0,6.2832); cx.fillStyle='#fff'; cx.fill();
+    cx.beginPath(); cx.arc(-size*0.13,-size*0.05,size*0.045,0,6.2832); cx.fillStyle='#000'; cx.fill();
+    cx.beginPath(); cx.arc(size*0.13,-size*0.05,size*0.045,0,6.2832); cx.fillStyle='#000'; cx.fill();
+    // рот во время атаки
+    if(f.phase==='attack' && f.t%0.4<0.2){
+      cx.beginPath(); cx.arc(0,size*0.18,size*0.22,0,Math.PI); cx.fillStyle='#400'; cx.fill();
+    }
+    // лёгкое свечение
+    cx.beginPath(); cx.arc(0,0,size*0.5,0,6.2832);
+    cx.fillStyle='rgba('+c.r+','+c.g+','+c.b+',0.12)'; cx.fill();
+    cx.restore();
+    // статус-подпись
+    cx.font=Math.max(12,Math.min(18,cw*0.014))+'px Georgia';
+    cx.fillStyle=f.form2?'#ff6b6b':'rgba(255,255,255,0.85)';
+    cx.textAlign='center';
+    cx.fillText(boss.n+(f.form2?' · 2-я форма':''), cx0, cy0+size*0.75);
   }
   function renderBosses(){
     var g=document.getElementById('bossGrid'); if(!g) return; g.innerHTML='';
