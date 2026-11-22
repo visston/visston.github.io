@@ -46,6 +46,8 @@
 
   .wrap{ text-align:center; padding-top:38px; }
   .logo{ font:700 56px Georgia,serif; letter-spacing:6px; color:var(--red-bright); text-shadow:0 0 30px var(--red-dim); animation:flicker 3.4s infinite; }
+  .logo .nick-items{ display:inline-flex; gap:3px; margin-left:10px; vertical-align:middle; }
+  .logo .nick-item{ font-size:18px; line-height:1; filter:drop-shadow(0 0 4px rgba(0,0,0,.4)); }
   @keyframes flicker{ 0%,18%,22%,50%,54%,100%{opacity:1;} 19%,21%,53%{opacity:.72;} }
   .logo small{ display:block; font-size:13px; letter-spacing:3px; color:var(--dim); font-weight:400; margin-top:8px; }
   .clock{ margin-top:20px; font-size:44px; font-weight:300; letter-spacing:2px; }
@@ -66,11 +68,13 @@
 
   .tiles{ margin-top:26px; display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
   @media (max-width:640px){ .tiles{ grid-template-columns:repeat(2,1fr);} }
-  .tile{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--txt); transition:.2s; }
+  .tile{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--txt); transition:.2s; position:relative; overflow:hidden; }
   .tile:hover{ border-color:var(--red); background:var(--panel2); transform:translateY(-3px); box-shadow:0 6px 18px rgba(200,48,63,0.15); }
   .tile .ic{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:21px; overflow:hidden; }
   .tile .ic img{ width:100%;height:100%;object-fit:cover;border-radius:12px; }
   .tile span{ font-size:12px; color:#c9c2c0; }
+  .tile .tile-flash{ position:absolute; width:10px; height:10px; border-radius:50%; pointer-events:none; background:radial-gradient(circle,#fff,var(--red-bright,#e0485a) 60%,transparent); transform:translate(-50%,-50%); animation:tileFlash .4s ease-out forwards; }
+  @keyframes tileFlash{ 0%{ width:6px;height:6px; opacity:.9; } 100%{ width:120px;height:120px; opacity:0; } }
   .tile.add-tile{ background:transparent; border:1px dashed #3a3a48; cursor:pointer; color:var(--dim); }
   .tile.add-tile:hover{ border-color:var(--red); color:var(--red-bright); background:rgba(200,48,63,0.08); }
   .tile-ctx{ position:fixed; z-index:3000; background:var(--panel,#160f12); border:1px solid var(--border,#3a3a48); border-radius:10px; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.5); min-width:150px; }
@@ -155,6 +159,8 @@
   .theme-grid.items{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
   .theme-grid.bosses{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
   .theme-item .boss-pic{ width:40px;height:40px;object-fit:contain; }
+  .theme-item.item:hover .boss-pic{ animation:bossShake .3s ease; }
+  @keyframes bossShake{ 0%{transform:translate(0,0) rotate(0);} 25%{transform:translate(-2px,1px) rotate(-6deg);} 50%{transform:translate(2px,-1px) rotate(6deg);} 75%{transform:translate(-1px,-2px) rotate(-4deg);} 100%{transform:translate(0,0) rotate(0);} }
   .boss-fx{ transition:transform .5s ease,opacity .5s ease; transform:scale(.1); opacity:0; filter:drop-shadow(0 0 24px rgba(0,0,0,.6)); line-height:1; }
   .boss-fx.in{ transform:scale(1); opacity:.92; }
   .boss-fx.out{ transform:scale(2.2) rotate(20deg); opacity:0; }
@@ -404,7 +410,7 @@
 <main>
   <div class="container">
     <div class="wrap">
-      <div class="logo"><span class="brand-main">VISSTON ✕ <span id="logoChar">CAIN</span></span><small id="logoSub">THE BINDING OF ISAAC</small></div>
+      <div class="logo"><span class="brand-main">VISSTON ✕ <span id="logoChar">CAIN</span></span><small id="logoSub">THE BINDING OF ISAAC</small><div class="nick-items" id="nickItems"></div></div>
       <div class="clock" id="clock">--:--</div>
       <div class="date" id="date"></div>
       <div class="quote" id="quote"></div>
@@ -504,6 +510,14 @@
             <input type="file" id="tImgFile" accept="image/*">
             <span class="hint-sm">свой файл с компьютера</span>
           </div>
+        </div>
+        <div class="m-field">
+          <label>✨ Анимация открытия</label>
+          <div class="icon-picker" id="tAnimPicker"></div>
+        </div>
+        <div class="m-field">
+          <label>🔊 Звук открытия</label>
+          <div class="icon-picker" id="tSoundPicker"></div>
         </div>
         <div class="m-preview" id="mPreview">Иконка: 🔗</div>
         <div class="modal-actions">
@@ -1006,18 +1020,86 @@
   /* ===== Добавление плиток ===== */
 var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementById('modalOverlay'), addBtn=document.getElementById('addBtn'), SKEY='cain_custom_tiles';
   var tileUid=0;
-  function openModal(){ overlay.classList.add('open'); document.getElementById('tName').focus(); }
-  function closeModal(){ overlay.classList.remove('open'); document.getElementById('tForm').reset(); _selIcon='🔗'; _fileImg=''; }
+  function openModal(){ fillTilePickers(); overlay.classList.add('open'); document.getElementById('tName').focus(); }
+  function closeModal(){ overlay.classList.remove('open'); document.getElementById('tForm').reset(); _selIcon='🔗'; _fileImg=''; selAnim='pop'; selSound='pop'; }
   addBtn.addEventListener('click',openModal);
   var fabBtn=document.getElementById('fabBtn'); if(fabBtn) fabBtn.addEventListener('click',openModal);
   function loadSaved(){ try{ var r=localStorage.getItem(SKEY); return r?JSON.parse(r):[]; }catch(e){ return []; } }
   function saveAll(l){ try{ localStorage.setItem(SKEY,JSON.stringify(l)); }catch(e){} }
+  // короткий звук через Web Audio API (без внешнего файла)
+  var sfxCtx=null;
+  // варианты анимаций и звуков открытия плитки
+  var TILE_ANIMS=[
+    {id:'pop',    e:'✨', n:'Вспышка'},
+    {id:'none',   e:'▪',  n:'Нет'},
+    {id:'spin',   e:'🌀', n:'Вращение'},
+    {id:'bounce', e:'🏀', n:'Прыжок'},
+    {id:'fade',   e:'🌫', n:'Появление'},
+    {id:'shake',  e:'⚡', n:'Тряска'},
+    {id:'zoom',   e:'🔍', n:'Масштаб'},
+    {id:'drop',   e:'🪂', n:'Падение'},
+    {id:'glow',   e:'💠', n:'Свечение'}
+  ];
+  var TILE_SOUNDS=[
+    {id:'pop',  e:'🔔', n:'Клик'},
+    {id:'none', e:'🔇', n:'Нет'},
+    {id:'beep', e:'🔊', n:'Короткий'},
+    {id:'chime',e:'🎐', n:'Мелодия'},
+    {id:'coin', e:'🪙', n:'Монета'},
+    {id:'pop2', e:'🫧', n:'Хлопок'}
+  ];
+  var selAnim='pop', selSound='pop';
+  function fillTilePickers(){
+    var ag=document.getElementById('tAnimPicker'), sg=document.getElementById('tSoundPicker');
+    if(!ag) return;
+    ag.innerHTML=''; sg.innerHTML='';
+    TILE_ANIMS.forEach(function(a){
+      var b=document.createElement('button'); b.type='button'; b.className='ipick'+(a.id===selAnim?' sel':''); b.title=a.n; b.innerHTML=a.e;
+      b.addEventListener('click',function(){ document.querySelectorAll('#tAnimPicker .ipick').forEach(function(x){x.classList.remove('sel');}); b.classList.add('sel'); selAnim=a.id; });
+      ag.appendChild(b);
+    });
+    TILE_SOUNDS.forEach(function(s){
+      var b=document.createElement('button'); b.type='button'; b.className='ipick'+(s.id===selSound?' sel':''); b.title=s.n; b.innerHTML=s.e;
+      b.addEventListener('click',function(){ document.querySelectorAll('#tSoundPicker .ipick').forEach(function(x){x.classList.remove('sel');}); b.classList.add('sel'); selSound=s.id; playTileSound('open'); });
+      sg.appendChild(b);
+    });
+  }
+  function applyTileAnim(el, anim){
+    if(!el) return;
+    el.classList.remove('tf-pop','tf-spin','tf-bounce','tf-fade','tf-shake','tf-zoom','tf-drop','tf-glow');
+    if(anim && anim!=='none' && anim!=='pop') el.classList.add('tf-'+anim);
+  }
+  function playTileSound(kind){
+    try{
+      if(!sfxCtx) sfxCtx=new (window.AudioContext||window.webkitAudioContext)();
+      var t=sfxCtx.currentTime;
+      var osc=sfxCtx.createOscillator(), g=sfxCtx.createGain();
+      if(kind==='coin'){ osc.type='square'; osc.frequency.setValueAtTime(988,t); osc.frequency.setValueAtTime(1319,t+0.08); }
+      else if(kind==='chime'){ osc.type='triangle'; osc.frequency.setValueAtTime(660,t); osc.frequency.setValueAtTime(990,t+0.09); }
+      else if(kind==='beep'){ osc.type='square'; osc.frequency.setValueAtTime(660,t); }
+      else { osc.type='sine'; osc.frequency.setValueAtTime(kind==='open'?520:820, t); osc.frequency.exponentialRampToValueAtTime(kind==='open'?880:520, t+0.12); }
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+(kind==='chime'?0.3:0.14));
+      osc.connect(g); g.connect(sfxCtx.destination);
+      osc.start(t); osc.stop(t+(kind==='chime'?0.32:0.16));
+    }catch(e){}
+  }
   function buildTile(t, custom){
     var a=document.createElement('a'); a.className='tile'; a.href=t.url; a.target='_blank';
     if(custom){ a.setAttribute('data-uid', (t.uid!==undefined?t.uid:(tileUid++))); a.setAttribute('data-custom','1'); }
     var ic=t.icon || '🔗';
     var img=t.img?'<div class="ic"><img src="'+encodeURI(t.img)+'" alt=""></div>':'<div class="ic">'+ic+'</div>';
-    a.innerHTML=img+'<span></span>'; a.querySelector('span').textContent=t.name; return a; }
+    a.innerHTML=img+'<span></span>'; a.querySelector('span').textContent=t.name;
+    // клик: быстрая анимация «открытия» + звук
+    a.addEventListener('click',function(ev){
+      var snd = t.sound && t.sound!=='none' ? t.sound : 'open';
+      playTileSound(snd);
+      applyTileAnim(a, t.anim);
+      var flash=document.createElement('span');
+      flash.className='tile-flash'; flash.style.left=(ev.clientX-a.getBoundingClientRect().left)+'px'; flash.style.top=(ev.clientY-a.getBoundingClientRect().top)+'px';
+      a.appendChild(flash); setTimeout(function(){ if(flash.parentNode) flash.parentNode.removeChild(flash); }, 420);
+    });
+    return a; }
   // меню для пользовательской плитки: редактировать / удалить (правая кнопка)
   var ctxMenu=document.createElement('div'); ctxMenu.className='tile-ctx'; ctxMenu.style.display='none';
   ctxMenu.innerHTML='<button type="button" class="tc-edit" id="ctxEdit">✏️ Редактировать</button><button type="button" class="tc-del" id="ctxDel">🗑 Удалить</button>';
@@ -1044,6 +1126,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     document.getElementById('tUrl').value=t.url;
     document.getElementById('tImg').value=t.img||'';
     _selIcon=t.icon||'🔗'; _fileImg='';
+    selAnim=t.anim||'pop'; selSound=t.sound||'pop';
     document.querySelector('.m-title').textContent='Редактировать плитку';
     var sb=document.querySelector('#tForm button[type="submit"]'); if(sb) sb.textContent='Сохранить';
     document.getElementById('mPreview').textContent='Иконка: '+(_selIcon);
@@ -1068,15 +1151,14 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var icon=_selIcon || '🔗';
     var editUid=this.getAttribute('data-edit');
     if(editUid!==null){
-      for(var i=0;i<saved.length;i++){ if(String(saved[i].uid)===editUid){ saved[i].name=name; saved[i].url=url; saved[i].img=(img||_fileImg||saved[i].img||''); saved[i].icon=icon; break; } }
+      for(var i=0;i<saved.length;i++){ if(String(saved[i].uid)===editUid){ saved[i].name=name; saved[i].url=url; saved[i].img=(img||_fileImg||saved[i].img||''); saved[i].icon=icon; saved[i].anim=selAnim; saved[i].sound=selSound; break; } }
       saveAll(saved);
       var a=document.querySelector('#tilesBox a.tile[data-uid="'+editUid+'"]'); if(a) a.outerHTML=buildTile(saved.filter(function(x){return String(x.uid)===editUid;})[0],true).outerHTML;
       this.removeAttribute('data-edit');
       document.querySelector('.m-title').textContent='Новая плитка';
       var sb=document.querySelector('#tForm button[type="submit"]'); if(sb) sb.textContent='Добавить плитку';
-      // перепривязка контекстного меню новой плитки не нужна: оно вешается на tilesBox
     } else {
-      var t={name:name,url:url,img:(img||_fileImg||''),icon:icon,uid:tileUid++}; saved.push(t); saveAll(saved); insertTile(buildTile(t,true));
+      var t={name:name,url:url,img:(img||_fileImg||''),icon:icon,uid:tileUid++,anim:selAnim,sound:selSound}; saved.push(t); saveAll(saved); insertTile(buildTile(t,true));
     }
     closeModal();
     _selIcon='🔗'; _fileImg='';
@@ -1797,6 +1879,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   var ANIM_KEY='cain_anim';
   var anims=[
     {n:'Туман', id:'mist', t:'плавающие пятна', c:'#9aa7b5', type:'drift'},
+    {n:'Рыбки', id:'fish', t:'рыбки плавают, исчезают при клике', c:'#4ad0c8', type:'fish'},
     {n:'Звёзды', id:'stars', t:'мерцающие точки', c:'#ffffff', type:'rise'},
     {n:'Снег', id:'snow', t:'падающие снежинки', c:'#dfeaf3', type:'snow'},
     {n:'Дождь', id:'rain', t:'косые линии', c:'#7fb2e0', type:'rain'},
@@ -1853,6 +1936,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     for(var i=0;i<n;i++){
       var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.3+Math.random()*0.6,tw:Math.random()*6.28,s:0.2+Math.random()*1.4,ang:Math.random()*6.28,ph:Math.random()*6.28};
       if(type==='snow'){ p.vy=0.3+Math.random()*0.9; p.vx=(Math.random()-0.5)*0.4; p.r=1+Math.random()*3; }
+      else if(type==='fish'){ p.vy=(Math.random()-0.5)*0.4; p.vx=(0.4+Math.random()*1.1)*(Math.random()<0.5?-1:1); p.r=1.5+Math.random()*2.5; p.dir=p.vx>0?1:-1; p.flick=Math.random()*10; }
       else if(type==='rain'){ p.vy=3.5+Math.random()*5; p.vx=(Math.random()-0.5)*0.5; p.r=1.2; }
       else if(type==='fire'){ p.vy=-(0.4+Math.random()*1); p.vx=(Math.random()-0.5)*0.5; p.r=1.5+Math.random()*2.6; }
       else if(type==='bubbles'){ p.vy=-(0.25+Math.random()*0.7); p.vx=(Math.random()-0.5)*0.3; p.r=1+Math.random()*3; }
@@ -1874,6 +1958,13 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var spec=anims.filter(function(a){return a.id===id;})[0]; if(!spec) return accentRBG;
     var c=spec.c||'#fff'; return hexToRgb(c);
   }
+  // клик по фону — рыбки исчезают (только в режиме fish)
+  document.addEventListener('click',function(ev){
+    if(!parts || curAnim!=='fish') return;
+    var hit=false;
+    for(var i=0;i<parts.length;i++){ var p=parts[i]; if(Math.abs(p.x-ev.clientX)<40 && Math.abs(p.y-ev.clientY)<40){ p.r=0; p.dead=true; hit=true; } }
+    if(hit) parts=parts.filter(function(p){return !p.dead;});
+  });
   var sceneT=0;
   function drawScene(type){
     var b=animColor(curAnim);
@@ -1923,6 +2014,16 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       for(var bb=0;bb<5;bb++){ var by=ch-30-bb*30+Math.sin(sceneT*2+bb)*8; cx.beginPath(); cx.moveTo(0,by); for(var bxx=0;bxx<=cw;bxx+=24){ cx.lineTo(bxx,by+Math.sin(bxx*0.02+sceneT*3+bb)*6); } cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath(); cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+','+(0.14-bb*0.02)+')'; cx.fill(); }
       return;
     }
+    if(type==='fish'){ // подводный мир: неровное дно с травой и пузырьками
+      sceneT+=0.02;
+      cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+',0.10)';
+      cx.beginPath(); cx.moveTo(0,ch-20);
+      for(var fx=0;fx<=cw;fx+=16){ cx.lineTo(fx,ch-20-Math.abs(Math.sin(fx*0.03+sceneT)*12)); }
+      cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath(); cx.fill();
+      // водоросли
+      for(var wa=0;wa<5;wa++){ var wx=wa*cw/5+20; cx.strokeStyle='rgba('+Math.min(255,b.g+80|0)+',220,120,0.5)'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(wx,ch); cx.quadraticCurveTo(wx+Math.sin(sceneT*2+wa)*8,ch-28,wx-Math.sin(sceneT*3+wa)*8,ch-46); cx.stroke(); }
+      return;
+    }
     // общий фон-подложка под цвет темы
     var gg=cx.createLinearGradient(0,0,0,ch);
     gg.addColorStop(0,'rgba('+b.r+','+b.g+','+b.b+',0.04)');
@@ -1960,6 +2061,21 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       if(type==='bubbles'){ // пузырь с ободком
         cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.4; cx.stroke();
         cx.beginPath(); cx.arc(-p.r*0.3,-p.r*0.3,p.r*0.25,0,6.2832); cx.fillStyle='rgba(255,255,255,'+(a*0.7).toFixed(3)+')'; cx.fill(); cx.restore(); continue;
+      }
+      if(type==='fish'){
+        // рыбка: тело + хвост + плавник, идёт в сторону p.dir
+        var s=p.r*0.9, dir=p.dir||1;
+        cx.scale(dir,1);
+        p.flick=(p.flick||0)+0.15;
+        // хвост
+        cx.beginPath(); cx.moveTo(-s*1.1,0); cx.lineTo(-s*1.8,-s*0.6*Math.sin(p.flick)); cx.lineTo(-s*1.8,s*0.6*Math.sin(p.flick)); cx.closePath(); cx.fillStyle=col; cx.fill();
+        // тело
+        cx.beginPath(); cx.ellipse(0,0,s,s*0.62,0,0,6.2832); cx.fillStyle=col; cx.fill();
+        // плавник
+        cx.beginPath(); cx.moveTo(-s*0.2,-s*0.4); cx.lineTo(-s*0.5,-s*0.9*Math.sin(p.flick)); cx.lineTo(s*0.2,-s*0.4); cx.closePath(); cx.fillStyle='rgba(0,0,0,0.25)'; cx.fill();
+        // глаз
+        cx.beginPath(); cx.arc(s*0.55,-s*0.12,s*0.16,0,6.2832); cx.fillStyle='rgba(0,0,0,0.6)'; cx.fill();
+        cx.restore(); continue;
       }
       if(type==='fire'){ // языки: треугольники вверх
         cx.beginPath(); cx.moveTo(0,p.r); cx.lineTo(-p.r*0.7,-p.r*0.8); cx.lineTo(p.r*0.7,-p.r*0.8); cx.closePath(); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
@@ -2091,6 +2207,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var owned=(function(){ try{ return JSON.parse(localStorage.getItem('cain_items')||'[]'); }catch(e){ return []; } })();
     var tally=document.getElementById('itemTally');
     if(tally) tally.textContent='Собрано предметов: '+owned.length+' из '+ITEMS.length+((owned.length===ITEMS.length)?' 🏆 Всё собрано!':'');
+    renderNickItems(owned);
     var list=ITEMS.filter(function(it){ return !q || it.n.toLowerCase().indexOf(q)>-1 || it.t.toLowerCase().indexOf(q)>-1 || it.e.toLowerCase().indexOf(q)>-1; });
     list.forEach(function(it){
       var has=owned.indexOf(it.n)>-1;
@@ -2108,91 +2225,114 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     });
     if(!list.length) g.innerHTML='<div style="padding:12px;color:var(--dim)">Ничего не найдено.</div>';
   }
+  function renderNickItems(owned){
+    var box=document.getElementById('nickItems');
+    if(!box) return;
+    if(!owned || !owned.length){ box.innerHTML=''; box.style.display='none'; return; }
+    var icons={};
+    ITEMS.forEach(function(it){ icons[it.n]=it.ic; });
+    box.innerHTML=owned.map(function(n){ return '<span class="nick-item" title="'+n+'">'+(icons[n]||'▪')+'</span>'; }).join('');
+    box.style.display='inline-flex';
+  }
   var itemSearch=document.getElementById('itemSearch');
   if(itemSearch) itemSearch.addEventListener('input',renderItems);
   var itemReset=document.getElementById('itemReset');
   if(itemReset) itemReset.addEventListener('click',function(){ if(confirm('Сбросить весь собранный набор предметов?')){ try{ localStorage.setItem('cain_items','[]'); }catch(e){} renderItems(); } });
 
   /* ===== Каталог боссов Isaac ===== */
+  var LOCAL_IMG_MISSING={};
   var BOSS_IMG={
   'Blastocyst':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d5/Boss_Blastocyst_portrait.png',
-  'C.H.A.D.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/31/Boss_C.H.A.D._portrait.png',
-  'Chub':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a5/Boss_Chub_portrait.png',
-  'Dark One':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/28/Boss_Dark_One_portrait.png',
-  'Famine':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/55/Boss_Famine_portrait.png',
-  'Fistula':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ea/Boss_Fistula_portrait.png',
-  'Gemini':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/b/bf/Boss_Gemini_portrait.png',
-  'Gish':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a0/Boss_Gish_portrait.png',
-  'Gurdy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ea/Boss_Gurdy_portrait.png',
-  'Gurdy Jr.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/6/6b/Boss_Gurdy_Jr._portrait.png',
-  'Headless Horseman':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/ab/Boss_Headless_Horseman_portrait.png',
-  'Larry Jr.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/cc/Boss_Larry_Jr._portrait.png',
-  'Loki':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/36/Boss_Loki_portrait.png',
-  'Mama Gurdy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f1/Boss_Mama_Gurdy_portrait.png',
-  'Mega Fatty':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f5/Boss_Mega_Fatty_portrait.png',
+  'C.H.A.D.':'bosses/Boss_C.H.A.D..jpg',
+  'Chub':'bosses/Boss_Chub.jpg',
+  'Dark One':'bosses/Boss_Dark_One.jpg',
+  'Famine':'bosses/Boss_Famine.png',
+  'Fistula':'bosses/Boss_Fistula.png',
+  'Death':'bosses/Boss_Death.png',
+  'Isaac':'bosses/Boss_Isaac.jpg',
+  'Gemini':'bosses/Boss_Gemini.jpg',
+  'Gish':'bosses/Boss_Gish.jpg',
+  'Gurdy':'bosses/Boss_Gurdy.jpg',
+  'Gurdy Jr.':'bosses/Boss_Gurdy_Jr..png',
+  'Headless Horseman':'bosses/Boss_Headless_Horseman.jpg',
+  'Larry Jr.':'bosses/Boss_Larry_Jr..png',
+  'Loki':'bosses/Boss_Loki.jpg',
+  'Mama Gurdy':'bosses/Boss_Mama_Gurdy.jpg',
+  'Mega Fatty':'bosses/Boss_Mega_Fatty.jpg',
   'Mega Satan':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/80/Boss_Mega_Satan_portrait.png',
-  'Monstro':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5d/Monstro1.png',
-  'Monstro II':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c3/Boss_Monstro_II_portrait.png',
-  'Peep':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/db/Boss_Peep_portrait.png',
-  'Pestilence':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3d/Boss_Pestilence_portrait.png',
-  'Polycephalus':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/81/Boss_Polycephalus_portrait.png',
+  'Monstro':'bosses/Boss_Monstro.png',
+  'Monstro II':'bosses/Boss_Monstro_II.jpg',
+  'Peep':'bosses/Boss_Peep.jpg',
+  'Pestilence':'bosses/Boss_Pestilence.png',
+  'Polycephalus':'bosses/Boss_Polycephalus.jpg',
   'Satan':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/6/65/Boss_Satan_Hoof_ingame.png',
-  'Scolex':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/00/Boss_Scolex_portrait.png',
-  'Steven':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/cd/Boss_Steven_portrait.png',
-  'The Adversary':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/e1/Boss_The_Adversary_portrait.png',
-  'The Bloat':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d2/Boss_The_Bloat_portrait.png',
-  'The Cage':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/4a/Boss_The_Cage_portrait.png',
-  'The Fallen':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/56/Boss_The_Fallen_portrait.png',
-  'The Hollow':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f3/Boss_The_Hollow_portrait.png',
-  'The Husk':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a2/Boss_The_Husk_portrait.png',
-  'War':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/25/Boss_War_portrait.png',
-  'Baby Plum':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c5/Boss_Baby_Plum_portrait.png',
-  'Big Horn':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/58/Boss_Big_Horn_portrait.png',
-  'Brownie':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/33/Boss_Brownie_portrait.png',
+  'Scolex':'bosses/Boss_Scolex.jpg',
+  'Steven':'bosses/Boss_Steven.jpg',
+  'The Adversary':'bosses/Boss_The_Adversary.jpg',
+  'The Bloat':'bosses/Boss_The_Bloat.jpg',
+  'The Cage':'bosses/Boss_The_Cage.jpg',
+  'The Fallen':'bosses/Boss_The_Fallen.jpg',
+  'The Hollow':'bosses/Boss_The_Hollow.jpg',
+  'The Husk':'bosses/Boss_The_Husk.png',
+  'War':'bosses/Boss_War.jpg',
+  'Baby Plum':'bosses/Boss_Baby_Plum.jpg',
+  'Big Horn':'bosses/Boss_Big_Horn.jpg',
+  'Brownie':'bosses/Boss_Brownie.jpg',
   'Chimera':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/36/Boss_Chimera_portrait.png',
-  'Conquest':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c2/Boss_Conquest_portrait.png',
-  'Daddy Long Legs':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3f/Boss_Daddy_Long_Legs_portrait.png',
-  'Dangle':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/12/Boss_Dangle_portrait.png',
-  'Delirium':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3c/Boss_Delirium_Daddy_Long_Legs_ingame.png',
-  'Dingle':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/1f/Boss_Dingle_portrait.png',
+  'Conquest':'bosses/Boss_Conquest.png',
+  'Daddy Long Legs':'bosses/Boss_Daddy_Long_Legs.png',
+  'Dangle':'bosses/Boss_Dangle.jpg',
+  'Delirium':'bosses/Boss_Delirium.jpg',
+  'Dingle':'bosses/Boss_Dingle.jpg',
+  'Duke of Flies':'bosses/Boss_The_Duke_of_Flies.jpg',
   'Great Gideon':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/7a/Boss_Great_Gideon_portrait.png',
-  'Gurglings':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/19/Boss_Gurglings_portrait.png',
+  'Gurglings':'bosses/Boss_Gurglings.jpg',
   'Hornfel':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/eb/Boss_Hornfel_portrait.png',
-  'Hush':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/88/Boss_Hush_portrait.png',
-  'Little Horn':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/1a/Boss_Little_Horn_portrait.png',
-  'Mask of Infamy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c4/Boss_Mask_of_Infamy_portrait.png',
+  'Hush':'bosses/Boss_Hush.jpg',
+  'Little Horn':'bosses/Boss_Little_Horn.jpg',
+  'Mask of Infamy':'bosses/Boss_Mask_of_Infamy.jpg',
   'Mother':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/df/Boss_Mother_ingame.png',
-  'Mr. Fred':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/ad/Boss_Mr._Fred_portrait.png',
-  'Pin':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/87/Boss_Pin_portrait.png',
-  'Rag Man':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/33/Boss_Rag_Man_portrait.png',
-  'Rag Mega':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/52/Boss_Rag_Mega_portrait.png',
-  'Reap Creep':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/4d/Boss_Reap_Creep_portrait.png',
-  'Sisters Vis':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c4/Boss_Sisters_Vis_portrait.png',
-  'The Forsaken':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/06/Boss_The_Forsaken_portrait.png',
-  'The Frail':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3f/Boss_The_Frail_portrait.png',
-  'The Gate':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/b/b5/Boss_The_Gate_portrait.png',
-  'The Haunt':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/08/Boss_The_Haunt_portrait.png',
+  'Mr. Fred':'bosses/Boss_Mr._Fred.png',
+  'Pin':'bosses/Boss_Pin.jpg',
+  'Rag Man':'bosses/Boss_Rag_Man.jpg',
+  'Rag Mega':'bosses/Boss_Rag_Mega.png',
+  'Reap Creep':'bosses/Boss_Reap_Creep.jpg',
+  'Sisters Vis':'bosses/Boss_Sisters_Vis.jpg',
+  'The Forsaken':'bosses/Boss_The_Forsaken.jpg',
+  'The Frail':'bosses/Boss_The_Frail.jpg',
+  'The Gate':'bosses/Boss_The_Gate.png',
+  'The Haunt':'bosses/Boss_The_Haunt.jpg',
   'The Heretic':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/9/98/Boss_The_Heretic_portrait.png',
-  'The Matriarch':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d2/Matriarchconceptart.png',
-  'The Pile':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a3/Boss_The_Pile_portrait.png',
+  'The Matriarch':'bosses/Boss_The_Matriarch.jpg',
+  'The Pile':'bosses/Boss_The_Pile.jpg',
   'The Rainmaker':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/31/Boss_The_Rainmaker_portrait.png',
-  'The Scourge':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/af/Boss_The_Scourge_portrait.png',
-  'The Stain':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/75/Boss_The_Stain_portrait.png',
-  'The Wretched':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/e9/Boss_The_Wretched_portrait.png',
-  'Triachnid':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/af/Boss_Triachnid_Rebirth_portrait.png',
+  'The Scourge':'bosses/Boss_The_Scourge.jpg',
+  'The Stain':'bosses/Boss_The_Stain.jpg',
+  'The Visage':'bosses/Boss_The_Visage.png',
+  'The Wretched':'bosses/Boss_The_Wretched.png',
+  'Triachnid':'bosses/Boss_Triachnid.jpg',
+  'Turdlings':'bosses/Boss_Turdlings.jpg',
   'Tuff Twins':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ec/Boss_Tuff_Twins_portrait.png',
-  'Ultra Greed':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/18/Boss_Ultra_Greed_portrait.png',
+  'Ultra Greed':'bosses/Boss_Ultra_Greed.png',
+  'Ultra Greedier':'bosses/Boss_Ultra_Greedier.png',
   'Wormwood':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c9/Boss_Wormwood_%28Downpour%29_portrait.png',
-  'Bumbino':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/2b/Boss_Bumbino_portrait.png',
+  'Bumbino':'bosses/Boss_Bumbino.jpg',
   'Clog':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/20/Boss_Clog_portrait.png',
   'Clutch':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/44/Boss_Clutch_portrait.png',
   'Colostomia':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ee/Boss_Colostomia_portrait.png',
-  'Dogma':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5d/Boss_Dogma_portrait.png',
+  'Dogma':'bosses/Boss_Dogma.png',
   'Min-Min':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5b/Boss_Min-Min_portrait.png',
   'Singe':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/7e/Boss_Singe_portrait.png',
   'The Beast':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/15/Beast_charge.png',
   'The Shell':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f2/Boss_The_Shell_portrait.png',
-  'Turdlet':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/2e/Boss_Turdlet_portrait.png'
+  'Turdlet':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/2e/Boss_Turdlet_portrait.png',
+  '???':'bosses/Boss_Unknown.jpg',
+  'The Carrion Queen':'bosses/Boss_Carrion_Queen.png',
+  'The Widow':'bosses/Boss_Widow.jpg',
+  'Lokii':'bosses/Boss_Lokii.png',
+  'Blighted Ovum':'bosses/Boss_Blighted_Ovum.png',
+  'Teratoma':'bosses/Boss_Teratoma.jpg',
+  'Mega Maw':'bosses/Boss_Mega_Maw.png'
 };
   var BOSSES=[
     {n:'Monstro', t:'Клетка 1', d:'Прыгает на игрока, плюётся залпами крови в шахматном порядке.', e:'😈', c:'#9c5a4a', atk:'Прыжки + залпы слёз'},
@@ -2290,9 +2430,34 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     {n:'Cadavra', t:'Repentance', d:'Труп, разделяющийся на конечности.', e:'🧟', c:'#8a5a4a'}
   ];
   var bossFx=null;
+  var bossHoverTm=0;
+  // тип атаки по боссу: t — снаряды, c — контакт, f — огонь, l — лазер, s — призыв, g — пули-гравитация, w — волны, b — шипы
+  var BOSS_ATK={
+    'Monstro':'t','Monstro II':'t','Larry Jr.':'c','Chub':'t','Duke of Flies':'s','Gurdy':'s','Peep':'b','Loki':'t',
+    'Blastocyst':'s','Mom':'b','Scolex':'c','Famine':'g','Pestilence':'t','War':'c','Death':'s',"Mom's Heart":'s',
+    'It Lives!':'t','The Fallen':'b','Satan':'l','The Lamb':'b','Mega Satan':'l','Isaac':'t','???':'t','Gemini':'t',
+    'C.H.A.D.':'t','Headless Horseman':'b','The Hollow':'c','The Carrion Queen':'c','Gurdy Jr.':'b','The Husk':'t',
+    'The Bloat':'b','Mega Fatty':'s','The Cage':'b','Mama Gurdy':'t','Dark One':'w','The Adversary':'b','Polycephalus':'b',
+    'Mr. Fred':'t','The Widow':'s','Pin':'c','Conquest':'g','The Haunt':'s','Dingle':'t','Daddy Long Legs':'c',
+    'Triachnid':'c','Mask of Infamy':'b','The Wretched':'t','The Gate':'l','Gurglings':'s','The Stain':'t','Brownie':'s',
+    'The Forsaken':'t','Little Horn':'b','Rag Man':'s','Ultra Greed':'c','Hush':'l','Dangle':'t','The Frail':'t',
+    'Rag Mega':'s','Sisters Vis':'b','Big Horn':'b','Delirium':'t','Ultra Greedier':'g','The Matriarch':'s','The Pile':'s',
+    'Reap Creep':'b','Beelzeblub':'s','Wormwood':'c','The Rainmaker':'l','Tuff Twins':'b','The Heretic':'f','Hornfel':'l',
+    'Great Gideon':'s','Baby Plum':'t','The Scourge':'l','Chimera':'t','Mother':'s','Min-Min':'c','Clog':'t','Singe':'f',
+    'Bumbino':'c','Colostomia':'s','The Shell':'b','Turdlet':'c','Raglich':'s','Dogma':'l','The Beast':'w','Horny Boys':'c',
+    'Clutch':'b','Cadavra':'s'
+  };
   function placeBoss(boss){
     // босс рисуется на заднем фоне через canvas с фазами: появление → атака → вторая форма → уход
     bossFx={ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.35 };
+    try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
+  }
+  function placeBossHover(boss){
+    // при наведении — короткая атака на фоне, с защитой от спама
+    var now=Date.now();
+    if(now-(bossHoverTm||0)<600) return;
+    bossHoverTm=now;
+    bossFx={ b:boss, t:0, phase:'enter', scale:0, attackTimer:0, form2:false, x:0.5, y:0.3, hover:true };
     try{ localStorage.setItem('cain_boss',boss.n); }catch(e){}
   }
   function drawBoss(){
@@ -2305,12 +2470,28 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     if(f.phase==='enter'){ f.scale+=0.04; if(f.scale>=1){ f.scale=1; f.phase='attack'; f.attackTimer=0; } }
     else if(f.phase==='attack'){
       f.attackTimer+=0.016;
-      // пульсация / атака
-      if(f.t%3>2.86){ // вспышка
-        cx.arc(cx0,cy0,size*0.6,0,6.2832);
-        cx.fillStyle='rgba('+c.r+','+c.g+','+c.b+',0.35)'; cx.fill();
+      var at=BOSS_ATK[boss.n]||'t';
+      // реальная атака босса: снаряды/шипы/лазер/огонь/волны и т.д.
+      var ang=f.t*2.4;
+      if(at==='t'){ // залп снарядов в сторону
+        if(f.t%0.5<0.04){ for(var k=0;k<5;k++){ var aa=ang+k*0.5-1; cx.beginPath(); cx.arc(cx0+Math.cos(aa)*size*0.5,cy0+Math.sin(aa)*size*0.5-size*0.1,size*0.05,0,6.2832); cx.fillStyle='rgba(255,80,80,0.8)'; cx.fill(); } }
       }
-      if(f.attackTimer>2.2){ f.phase=f.form2?'leave':'form2'; f.form2=true; f.attackTimer=0; }
+      else if(at==='b'){ // шипы вниз
+        if(f.t%0.45<0.04){ for(var k=0;k<4;k++){ var sx=cx0-size*0.3+k*size*0.2; cx.beginPath(); cx.moveTo(sx,cy0+size*0.3); cx.lineTo(sx+size*0.05,cy0+size*0.6); cx.lineTo(sx+size*0.1,cy0+size*0.3); cx.fillStyle='rgba(220,220,220,0.8)'; cx.fill(); } }
+      }
+      else if(at==='l'){ // лазерный луч
+        if(f.t%0.8<0.1){ cx.beginPath(); cx.moveTo(cx0,cy0); cx.lineTo(cx0+Math.cos(ang)*cw,cy0+Math.sin(ang)*cw); cx.strokeStyle='rgba(255,60,200,0.6)'; cx.lineWidth=3; cx.stroke(); }
+      }
+      else if(at==='f'){ // огонь
+        if(f.t%0.06<0.03){ cx.beginPath(); cx.arc(cx0+Math.cos(f.t)*size*0.2,cy0+Math.sin(f.t)*size*0.2,size*0.09,0,6.2832); cx.fillStyle='rgba(255,150,40,'+(0.4+Math.random()*0.4)+')'; cx.fill(); }
+      }
+      else if(at==='w'){ // волны/кольца
+        if(f.t%0.5<0.02){ var r=((f.t%2.5)/2.5)*size*1.2; cx.beginPath(); cx.arc(cx0,cy0,r,0,6.2832); cx.strokeStyle='rgba(120,180,255,'+(0.7-r/size)+')'; cx.lineWidth=3; cx.stroke(); }
+      }
+      else{ // контакт/призыв — искры вокруг
+        if(f.t%0.1<0.05){ cx.beginPath(); cx.arc(cx0+(Math.random()-0.5)*size,cy0+(Math.random()-0.5)*size,size*0.04,0,6.2832); cx.fillStyle='rgba(255,255,80,0.6)'; cx.fill(); }
+      }
+      if(f.attackTimer>f.hover?2.6:2.2){ f.phase=f.form2?'leave':'form2'; f.form2=true; f.attackTimer=0; }
     }
     else if(f.phase==='form2'){
       f.attackTimer+=0.016;
@@ -2346,10 +2527,11 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     cx.fillStyle=f.form2?'#ff6b6b':'rgba(255,255,255,0.85)';
     cx.textAlign='center';
     cx.fillText(boss.n+(f.form2?' · 2-я форма':''), cx0, cy0+size*0.75);
-    if(boss.atk){
+    var atkName=boss.atk||{t:'Залп слёз',c:'Контакт',f:'Огненная атака',l:'Лазер',s:'Призыв врагов',g:'Снаряды',w:'Волны',b:'Шипы'}[BOSS_ATK[boss.n]]||'Атака';
+    if(atkName){
       cx.font=Math.max(10,Math.min(14,cw*0.011))+'px Georgia';
       cx.fillStyle='rgba(255,255,255,0.6)';
-      cx.fillText('⚔ '+boss.atk, cx0, cy0+size*0.75+18);
+      cx.fillText('⚔ '+atkName, cx0, cy0+size*0.75+18);
     }
   }
   function renderBosses(){
@@ -2366,6 +2548,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       }
       d.innerHTML=inner+'<div class="nm">'+b.n+'</div><div class="tt">'+b.t+'</div>';
       d.addEventListener('click',function(){ placeBoss(b); });
+      d.addEventListener('mouseenter',function(){ placeBossHover(b); });
       g.appendChild(d);
     });
     if(!list.length) g.innerHTML='<div style="padding:12px;color:var(--dim)">Ничего не найдено.</div>';
