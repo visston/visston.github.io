@@ -75,6 +75,22 @@
   .tile span{ font-size:12px; color:#c9c2c0; }
   .tile .tile-flash{ position:absolute; width:10px; height:10px; border-radius:50%; pointer-events:none; background:radial-gradient(circle,#fff,var(--red-bright,#e0485a) 60%,transparent); transform:translate(-50%,-50%); animation:tileFlash .4s ease-out forwards; }
   @keyframes tileFlash{ 0%{ width:6px;height:6px; opacity:.9; } 100%{ width:120px;height:120px; opacity:0; } }
+  .tile.tf-pop{ animation:tfPop .35s ease-out; }
+  .tile.tf-spin{ animation:tfSpin .45s ease-out; }
+  .tile.tf-bounce{ animation:tfBounce .5s ease; }
+  .tile.tf-fade{ animation:tfFade .35s ease; }
+  .tile.tf-shake{ animation:tfShake .4s ease; }
+  .tile.tf-zoom{ animation:tfZoom .4s ease-out; }
+  .tile.tf-drop{ animation:tfDrop .45s ease-out; }
+  .tile.tf-glow{ animation:tfGlow .5s ease; }
+  @keyframes tfPop{ 0%{ transform:scale(.6); opacity:.4; } 60%{ transform:scale(1.08); } 100%{ transform:scale(1); opacity:1; } }
+  @keyframes tfSpin{ 0%{ transform:rotate(-180deg) scale(.5); opacity:.3; } 100%{ transform:rotate(0) scale(1); opacity:1; } }
+  @keyframes tfBounce{ 0%{ transform:translateY(0); } 30%{ transform:translateY(-14px); } 55%{ transform:translateY(0); } 75%{ transform:translateY(-6px); } 100%{ transform:translateY(0); } }
+  @keyframes tfFade{ 0%{ opacity:0; transform:translateY(8px); } 100%{ opacity:1; transform:translateY(0); } }
+  @keyframes tfShake{ 0%{transform:translateX(0);} 20%{transform:translateX(-5px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} 100%{transform:translateX(0);} }
+  @keyframes tfZoom{ 0%{ transform:scale(1); } 40%{ transform:scale(1.25); } 100%{ transform:scale(1); } }
+  @keyframes tfDrop{ 0%{ transform:translateY(-30px) scale(.7); opacity:0; } 60%{ transform:translateY(4px) scale(1.02); opacity:1; } 100%{ transform:translateY(0) scale(1); } }
+  @keyframes tfGlow{ 0%{ box-shadow:0 0 0 rgba(224,72,90,0); } 50%{ box-shadow:0 0 26px 4px rgba(224,72,90,.55); } 100%{ box-shadow:0 0 0 rgba(224,72,90,0); } }
   .tile.add-tile{ background:transparent; border:1px dashed #3a3a48; cursor:pointer; color:var(--dim); }
   .tile.add-tile:hover{ border-color:var(--red); color:var(--red-bright); background:rgba(200,48,63,0.08); }
   .tile-ctx{ position:fixed; z-index:3000; background:var(--panel,#160f12); border:1px solid var(--border,#3a3a48); border-radius:10px; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.5); min-width:150px; }
@@ -1020,6 +1036,8 @@
   /* ===== Добавление плиток ===== */
 var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementById('modalOverlay'), addBtn=document.getElementById('addBtn'), SKEY='cain_custom_tiles';
   var tileUid=0;
+  // начальный uid = максимальный из сохранённых + 1, чтобы не пересекались
+  (function(){ try{ var arr=JSON.parse(localStorage.getItem(SKEY)||'[]'); var m=0; arr.forEach(function(t){ var n=parseInt(t.uid,10); if(!isNaN(n)&&n>=m)m=n+1; }); tileUid=m; }catch(e){ tileUid=0; } })();
   function openModal(){ fillTilePickers(); overlay.classList.add('open'); document.getElementById('tName').focus(); }
   function closeModal(){ overlay.classList.remove('open'); document.getElementById('tForm').reset(); _selIcon='🔗'; _fileImg=''; selAnim='pop'; selSound='pop'; }
   addBtn.addEventListener('click',openModal);
@@ -1090,15 +1108,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var ic=t.icon || '🔗';
     var img=t.img?'<div class="ic"><img src="'+encodeURI(t.img)+'" alt=""></div>':'<div class="ic">'+ic+'</div>';
     a.innerHTML=img+'<span></span>'; a.querySelector('span').textContent=t.name;
-    // клик: быстрая анимация «открытия» + звук
-    a.addEventListener('click',function(ev){
-      var snd = t.sound && t.sound!=='none' ? t.sound : 'open';
-      playTileSound(snd);
-      applyTileAnim(a, t.anim);
-      var flash=document.createElement('span');
-      flash.className='tile-flash'; flash.style.left=(ev.clientX-a.getBoundingClientRect().left)+'px'; flash.style.top=(ev.clientY-a.getBoundingClientRect().top)+'px';
-      a.appendChild(flash); setTimeout(function(){ if(flash.parentNode) flash.parentNode.removeChild(flash); }, 420);
-    });
+    // звук/анимация открытия теперь обрабатываются делегированным обработчиком на tilesBox
     return a; }
   // меню для пользовательской плитки: редактировать / удалить (правая кнопка)
   var ctxMenu=document.createElement('div'); ctxMenu.className='tile-ctx'; ctxMenu.style.display='none';
@@ -1143,6 +1153,22 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     ctxMenu.style.display='block';
   });
   function insertTile(el){ tilesBox.insertBefore(el, addBtn); }
+  // делегированный клик: звук + анимация открытия для ЛЮБОЙ плитки (базовой и своей)
+  tilesBox.addEventListener('click',function(ev){
+    var a=ev.target.closest ? ev.target.closest('a.tile') : null;
+    if(!a) return;
+    var uid=a.getAttribute('data-uid');
+    var t=null;
+    if(uid!==null){ saved.forEach(function(x){ if(String(x.uid)===uid) t=x; }); }
+    var snd = t && t.sound && t.sound!=='none' ? t.sound : 'open';
+    playTileSound(snd);
+    if(t){ applyTileAnim(a, t.anim); }
+    else { a.classList.remove('tf-pop','tf-spin','tf-bounce','tf-fade','tf-shake','tf-zoom','tf-drop','tf-glow'); }
+    var r=a.getBoundingClientRect();
+    var flash=document.createElement('span');
+    flash.className='tile-flash'; flash.style.left=(ev.clientX-r.left)+'px'; flash.style.top=(ev.clientY-r.top)+'px';
+    a.appendChild(flash); setTimeout(function(){ if(flash.parentNode) flash.parentNode.removeChild(flash); }, 420);
+  });
   var saved=loadSaved(); saved.forEach(function(t){ if(t.uid===undefined) t.uid=tileUid++; insertTile(buildTile(t,true)); });
   document.getElementById('tForm').addEventListener('submit',function(e){
     e.preventDefault();
@@ -1837,9 +1863,14 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var userText=(text||'').length>300? text.slice(0,300) : (text||'').trim();
     var styleHints='. detailed digital art, vibrant colors, sharp focus, cinematic composition';
     // по возможности переводим пользовательский текст в англ-промпт на лету (простая замена частых слов)
-    var ruEn={'кот':'cat','кошк':'cat','собака':'dog','пёс':'dog','машина':'car','дом':'house','город':'city','космос':'space','гора':'mountain','лес':'forest','море':'sea','солнце':'sun','луна':'moon','звезда':'star','дракон':'dragon','робот':'robot','ангел':'angel','демон':'demon','красн':'red','син':'blue','зелён':'green','жёлт':'yellow','бел':'white','чёрн':'black','розов':'pink','фиолет':'purple','оранж':'orange','тёмн':'dark','светл':'light','огн':'fire','языки':'fire','вода':'water','лёд':'ice','цвет':'flower'};
+    var ruEn={'кот':'cat','кошк':'cat','собака':'dog','пёс':'dog','щен':'puppy','машина':'car','автомобил':'car','дом':'house','город':'city','космос':'space','гора':'mountain','лес':'forest','море':'sea','океан':'ocean','река':'river','солнце':'sun','луна':'moon','звезда':'star','дракон':'dragon','робот':'robot','ангел':'angel','демон':'demon','красн':'red','син':'blue','зелён':'green','жёлт':'yellow','бел':'white','чёрн':'black','розов':'pink','фиолет':'purple','оранж':'orange','тёмн':'dark','светл':'light','огн':'fire','языки':'fire','пламя':'flame','вода':'water','лёд':'ice','снег':'snow','цвет':'flower','цветок':'flower','дерев':'tree','девочка':'girl','мальчик':'boy','человек':'person','мужчина':'man','женщина':'woman','кошка':'cat','какаш':'pile of poop','говн':'pile of poop','фекал':'feces','каках':'poop','камень':'stone','скал':'rock','крыл':'wing','меч':'sword','кров':'blood','сердц':'heart','глаз':'eye','череп':'skull','скелет':'skeleton','кост':'bone','призрак':'ghost','дух':'ghost','коса':'scythe','магм':'magma','лава':'lava','вулкан':'volcano','кристалл':'crystal','алмаз':'diamond','золот':'gold','серебр':'silver','монет':'coin','портрет':'portrait','пейзаж':'landscape','закат':'sunset','рассвет':'sunrise','ночь':'night','день':'day','небо':'sky','облак':'cloud','дождь':'rain','молния':'lightning','гром':'thunder','радуг':'rainbow','птен':'chick','птиц':'bird','бабоч':'butterfly','пчел':'bee','паук':'spider','волк':'wolf','лис':'fox','медвед':'bear','тигр':'tiger','лев':'lion','слон':'elephant','лошад':'horse','корова':'cow','свинь':'pig','овца':'sheep','коз':'goat','заяц':'rabbit','кролик':'rabbit','змей':'snake','ящер':'lizard','черепах':'turtle','лягуш':'frog','рыб':'fish','акул':'shark','кит':'whale','осьминог':'octopus'};
     var words=userText.split(/\s+/); var translated=[]; var hasCyr=/[а-яё]/i.test(userText);
-    for(var wi=0;wi<words.length;wi++){ var w=words[wi]; var low=w.toLowerCase(); var mapped=null; for(var k in ruEn){ if(low.indexOf(k)>-1){ mapped=ruEn[k]; break; } } translated.push(mapped||w); }
+    for(var wi=0;wi<words.length;wi++){
+      var w=words[wi]; var low=w.toLowerCase(); var mapped=null;
+      for(var k in ruEn){ if(low.indexOf(k)>-1){ mapped=ruEn[k]; break; } }
+      if(mapped){ translated.push(mapped); }
+      else if(!/[а-яё]/i.test(w)){ translated.push(w); } // некириллические слова оставляем, а нераспознанную кириллицу отбрасываем (не засоряет промпт)
+    }
     var promptText= hasCyr ? translated.join(' ') : userText;
     promptText += styleHints;
     var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(promptText)+'?width=832&height=624&seed='+seed+'&model=flux&nologo=true&noip=true&safe=true';
@@ -1879,55 +1910,55 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   var accentRBG=hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--red-bright').trim()||'#e0485a');
   var ANIM_KEY='cain_anim';
   var anims=[
-    {n:'Туман', id:'mist', t:'плавающие пятна', c:'#9aa7b5', type:'drift'},
-    {n:'Рыбки', id:'fish', t:'рыбки плавают, исчезают при клике', c:'#4ad0c8', type:'fish'},
-    {n:'Звёзды', id:'stars', t:'мерцающие точки', c:'#ffffff', type:'rise'},
-    {n:'Снег', id:'snow', t:'падающие снежинки', c:'#dfeaf3', type:'snow'},
-    {n:'Дождь', id:'rain', t:'косые линии', c:'#7fb2e0', type:'rain'},
-    {n:'Огонь', id:'fire', t:'взлетающие языки', c:'#ff7a3c', type:'fire'},
-    {n:'Пузыри', id:'bubbles', t:'поднимающиеся круги', c:'#8fe0d8', type:'bubbles'},
-    {n:'Искры', id:'sparks', t:'разлетающиеся точки', c:'#ffd54a', type:'swarm'},
-    {n:'Пыль', id:'dust', t:'медленная взвесь', c:'#c9a86a', type:'drift'},
-    {n:'Рой', id:'swarm', t:'хаотичные точки', c:'#c6c6c6', type:'swarm'},
-    {n:'Водоворот', id:'vortex', t:'закрученные точки', c:'#6fb7e8', type:'vortex'},
-    {n:'Пыльца', id:'pollen', t:'парящие частицы', c:'#ffd66e', type:'wave'},
-    {n:'Хаос', id:'chaos', t:'беспорядочное движение', c:'#d86fe0', type:'chaos'},
-    {n:'Метеоры', id:'meteor', t:'падающие с хвостом', c:'#ff9d5a', type:'meteor'},
-    {n:'Тьма', id:'dark', t:'медленные клубы', c:'#5a5a6a', type:'ring'},
-    {n:'Эхо', id:'echo', t:'расплывающиеся круги', c:'#9aa7d8', type:'echo'},
-    {n:'Жертва', id:'blood', t:'красные кляксы', c:'#c8303f', type:'heart'},
-    {n:'Мечты', id:'dream', t:'мягкое свечение', c:'#d8c6ff', type:'glow'},
-    {n:'Грех', id:'sin', t:'алые точки', c:'#e0505a', type:'swarm'},
-    {n:'Пылающий', id:'brim', t:'вертикальные потоки', c:'#ff4d4d', type:'fire'},
-    {n:'Слёзы', id:'tears', t:'капли вверх-вниз', c:'#8fd0ff', type:'swarm'},
-    {n:'Скелеты', id:'bone', t:'белые фрагменты', c:'#e8e0ce', type:'cross'},
-    {n:'Дух', id:'soul', t:'блёклые призраки', c:'#b8c8f0', type:'drift'},
-    {n:'Волны', id:'wave', t:'плавные колебания', c:'#5ab8e8', type:'wave'},
-    {n:'Молнии', id:'bolt', t:'вспышки линий', c:'#f5f06a', type:'bolt'},
-    {n:'Свечение', id:'glow', t:'светящиеся круги', c:'#ffec99', type:'glow'},
-    {n:'Летучие', id:'fly', t:'мельтешащие мухи', c:'#8aa04a', type:'swarm'},
-    {n:'Сущность', id:'essence', t:'прозрачные сферы', c:'#c8e0ff', type:'orb'},
-    {n:'Золотой', id:'gold', t:'золотые искры', c:'#ffd24a', type:'spark'},
-    {n:'Кристаллы', id:'crystal', t:'многогранные точки', c:'#9fe8ff', type:'spark'},
-    {n:'Туманы ада', id:'hell', t:'мрачный дым', c:'#7a3c3c', type:'ring'},
-    {n:'Розовый', id:'pink', t:'нежные частицы', c:'#ff9ad5', type:'bubbles'},
-    {n:'Абисс', id:'abyss', t:'тёмные провалы', c:'#4a3c6a', type:'drift'},
-    {n:'Небесный', id:'heaven', t:'светлые лучи', c:'#fff0c0', type:'beam'},
-    {n:'Лавовый', id:'lava', t:'магма из трещин', c:'#ff7a2a', type:'lava'},
-    {n:'Ледяной', id:'ice', t:'медленные кристаллы', c:'#b8ecff', type:'snow'},
-    {n:'Ядовитый', id:'toxic', t:'зелёные испарения', c:'#8ae04a', type:'rise'},
-    {n:'Багровый', id:'crimson', t:'тёмные капли', c:'#c82450', type:'rain'},
-    {n:'Изумруд', id:'emerald', t:'зелёные искры', c:'#2ae08a', type:'rise'},
-    {n:'Сапфир', id:'sapphire', t:'синие точки', c:'#3c8ae0', type:'swarm'},
-    {n:'Рубин', id:'ruby', t:'красные частицы', c:'#e03040', type:'rise'},
-    {n:'Янтарь', id:'amber', t:'тёплые искры', c:'#ffb02a', type:'glow'},
-    {n:'Турмалин', id:'tourmaline', t:'разные цвета', c:'#e06ad8', type:'chaos'},
-    {n:'Опал', id:'opal', t:'переливы', c:'#e8d8ff', type:'petal'},
-    {n:'Оникс', id:'onyx', t:'чёрные угли', c:'#3c3c46', type:'cross'},
-    {n:'Перидот', id:'peridot', t:'жёлто-зелёные', c:'#c8e050', type:'wave'},
-    {n:'Аметист', id:'amethyst', t:'фиол. кристаллы падают и разбиваются', c:'#b06ae0', type:'shard'},
-    {n:'Топаз', id:'topaz', t:'золотистые точки', c:'#ffd080', type:'snow'},
-    {n:'Циркон', id:'zircon', t:'искрящиеся сферы', c:'#d0e8f8', type:'glow'}
+    {n:'Туман', id:'mist', t:'мягкие клубы дыма', c:'#9aa7b5', type:'drift', shape:'cloud'},
+    {n:'Рыбки', id:'fish', t:'рыбки плавают, исчезают при клике', c:'#4ad0c8', type:'fish', shape:'fish'},
+    {n:'Звёзды', id:'stars', t:'мерцающие звезды', c:'#ffffff', type:'rise', shape:'star'},
+    {n:'Снег', id:'snow', t:'падающие снежинки', c:'#dfeaf3', type:'snow', shape:'snow'},
+    {n:'Дождь', id:'rain', t:'косые капли', c:'#7fb2e0', type:'rain', shape:'drop'},
+    {n:'Огонь', id:'fire', t:'языки пламени', c:'#ff7a3c', type:'fire', shape:'flame'},
+    {n:'Пузыри', id:'bubbles', t:'поднимающиеся пузыри', c:'#8fe0d8', type:'bubbles', shape:'bubble'},
+    {n:'Искры', id:'sparks', t:'четырёхлучевые искры', c:'#ffd54a', type:'swarm', shape:'spark'},
+    {n:'Пыль', id:'dust', t:'медленные пылинки', c:'#c9a86a', type:'drift', shape:'dust'},
+    {n:'Рой', id:'swarm', t:'жуки-рой', c:'#c6c6c6', type:'swarm', shape:'bug'},
+    {n:'Водоворот', id:'vortex', t:'спиральный водоворот', c:'#6fb7e8', type:'vortex', shape:'spiral'},
+    {n:'Пыльца', id:'pollen', t:'цветочная пыльца', c:'#ffd66e', type:'wave', shape:'petal'},
+    {n:'Хаос', id:'chaos', t:'разные осколки', c:'#d86fe0', type:'chaos', shape:'shard'},
+    {n:'Метеоры', id:'meteor', t:'падающие с хвостом', c:'#ff9d5a', type:'meteor', shape:'meteor'},
+    {n:'Тьма', id:'dark', t:'тёмные сгустки', c:'#5a5a6a', type:'ring', shape:'wisp'},
+    {n:'Эхо', id:'echo', t:'расходящиеся кольца', c:'#9aa7d8', type:'echo', shape:'echo'},
+    {n:'Жертва', id:'blood', t:'косы и капли крови', c:'#c8303f', type:'heart', shape:'scythe'},
+    {n:'Мечты', id:'dream', t:'нежные сны и звёзды', c:'#d8c6ff', type:'glow', shape:'dream'},
+    {n:'Грех', id:'sin', t:'перевёрнутые кресты', c:'#e0505a', type:'swarm', shape:'cross'},
+    {n:'Пылающий', id:'brim', t:'столбы огня', c:'#ff4d4d', type:'fire', shape:'brim'},
+    {n:'Слёзы', id:'tears', t:'слезы-капли', c:'#8fd0ff', type:'swarm', shape:'tear'},
+    {n:'Скелеты', id:'bone', t:'кости', c:'#e8e0ce', type:'cross', shape:'bone'},
+    {n:'Дух', id:'soul', t:'призраки', c:'#b8c8f0', type:'drift', shape:'ghost'},
+    {n:'Волны', id:'wave', t:'плавные волны', c:'#5ab8e8', type:'wave', shape:'wave'},
+    {n:'Молнии', id:'bolt', t:'зигзаги молний', c:'#f5f06a', type:'bolt', shape:'bolt'},
+    {n:'Свечение', id:'glow', t:'светящиеся сферы', c:'#ffec99', type:'glow', shape:'glow'},
+    {n:'Летучие', id:'fly', t:'мельтешащие мухи', c:'#8aa04a', type:'swarm', shape:'bug'},
+    {n:'Сущность', id:'essence', t:'светящиеся орбы', c:'#c8e0ff', type:'orb', shape:'orb'},
+    {n:'Золотой', id:'gold', t:'золотые монеты', c:'#ffd24a', type:'spark', shape:'coin'},
+    {n:'Кристаллы', id:'crystal', t:'кристаллы', c:'#9fe8ff', type:'spark', shape:'gem'},
+    {n:'Туманы ада', id:'hell', t:'мрачный дым ада', c:'#7a3c3c', type:'ring', shape:'cloud'},
+    {n:'Розовый', id:'pink', t:'нежные сердечки', c:'#ff9ad5', type:'bubbles', shape:'heart'},
+    {n:'Абисс', id:'abyss', t:'тёмные провалы', c:'#4a3c6a', type:'drift', shape:'hole'},
+    {n:'Небесный', id:'heaven', t:'лучи света', c:'#fff0c0', type:'beam', shape:'ray'},
+    {n:'Лавовый', id:'lava', t:'магма из трещин', c:'#ff7a2a', type:'lava', shape:'spark'},
+    {n:'Ледяной', id:'ice', t:'ледяные кристаллы', c:'#b8ecff', type:'snow', shape:'gem'},
+    {n:'Ядовитый', id:'toxic', t:'зелёные пузыри яда', c:'#8ae04a', type:'rise', shape:'bubble'},
+    {n:'Багровый', id:'crimson', t:'капли крови', c:'#c82450', type:'rain', shape:'drop'},
+    {n:'Изумруд', id:'emerald', t:'изумрудные осколки', c:'#2ae08a', type:'rise', shape:'gem'},
+    {n:'Сапфир', id:'sapphire', t:'сапфировые грани', c:'#3c8ae0', type:'swarm', shape:'gem'},
+    {n:'Рубин', id:'ruby', t:'рубиновые осколки', c:'#e03040', type:'rise', shape:'gem'},
+    {n:'Янтарь', id:'amber', t:'тёплые капли смолы', c:'#ffb02a', type:'glow', shape:'drop'},
+    {n:'Турмалин', id:'tourmaline', t:'разноцветные осколки', c:'#e06ad8', type:'chaos', shape:'gem'},
+    {n:'Опал', id:'opal', t:'переливчатые лепестки', c:'#e8d8ff', type:'petal', shape:'petal'},
+    {n:'Оникс', id:'onyx', t:'чёрные осколки', c:'#3c3c46', type:'cross', shape:'shard'},
+    {n:'Перидот', id:'peridot', t:'жёлто-зелёная листва', c:'#c8e050', type:'wave', shape:'leaf'},
+    {n:'Аметист', id:'amethyst', t:'фиол. кристаллы падают и разбиваются', c:'#b06ae0', type:'shard', shape:'gem'},
+    {n:'Топаз', id:'topaz', t:'золотые кристаллы', c:'#ffd080', type:'snow', shape:'gem'},
+    {n:'Циркон', id:'zircon', t:'искрящиеся звёзды', c:'#d0e8f8', type:'glow', shape:'spark'}
   ];
   var curAnim=(function(){ try{ return localStorage.getItem(ANIM_KEY)||'stars'; }catch(e){ return 'stars'; } })();
   function seedByAnim(id){
@@ -1937,7 +1968,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     for(var i=0;i<n;i++){
       var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.3+Math.random()*0.6,tw:Math.random()*6.28,s:0.2+Math.random()*1.4,ang:Math.random()*6.28,ph:Math.random()*6.28};
       if(type==='snow'){ p.vy=0.3+Math.random()*0.9; p.vx=(Math.random()-0.5)*0.4; p.r=1+Math.random()*3; }
-      else if(type==='fish'){ p.vy=(Math.random()-0.5)*0.4; p.vx=(0.4+Math.random()*1.1)*(Math.random()<0.5?-1:1); p.r=1.5+Math.random()*2.5; p.dir=p.vx>0?1:-1; p.flick=Math.random()*10; }
+      else if(type==='fish'){ p.vy=(Math.random()-0.5)*0.5; p.vx=(0.5+Math.random()*1.3)*(Math.random()<0.5?-1:1); p.r=4+Math.random()*4.5; p.dir=p.vx>0?1:-1; p.flick=Math.random()*10; }
       else if(type==='rain'){ p.vy=3.5+Math.random()*5; p.vx=(Math.random()-0.5)*0.5; p.r=1.2; }
       else if(type==='fire'){ p.vy=-(0.4+Math.random()*1); p.vx=(Math.random()-0.5)*0.5; p.r=1.5+Math.random()*2.6; }
       else if(type==='bubbles'){ p.vy=-(0.25+Math.random()*0.7); p.vx=(Math.random()-0.5)*0.3; p.r=1+Math.random()*3; }
@@ -1969,19 +2000,68 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     if(hit) parts=parts.filter(function(p){return !p.dead;});
   });
   var sceneT=0;
+  // сеть трещин для магмы: ветвящиеся ломаные линии (желтизна→красная кайма)
+  var lavaCracks=null, lavaSeeds=[];
+  function buildLavaCracks(){
+    lavaCracks=[]; lavaSeeds=[];
+    var seeds=22;
+    for(var s=0;s<seeds;s++){ lavaSeeds.push(Math.random()*200); }
+    // несколько "очагов" трещин по нижним 2/3 экрана
+    var n=14;
+    for(var i=0;i<n;i++){
+      var x0=15+Math.random()*(cw-30), y0=ch*0.5+Math.random()*ch*0.4;
+      var path=new Path2D();
+      path.moveTo(x0,y0);
+      var x=x0,y=y0, ang=Math.random()*6.28;
+      var segs=6+Math.floor(Math.random()*8);
+      for(var j=0;j<segs;j++){
+        ang+= (Math.random()-0.5)*1.6;
+        var len=20+Math.random()*55;
+        x+=Math.cos(ang)*len; y+=Math.sin(ang)*len;
+        if(x<0){x=0;ang=Math.atan2(Math.sin(ang),1);} if(x>cw){x=cw;ang=Math.atan2(Math.sin(ang),-1);}
+        if(y<0){y=0;ang=Math.atan2(1,Math.cos(ang));} if(y>ch)y=ch;
+        path.lineTo(x,y);
+        if(Math.random()<0.35){ // ветвление
+          var bAng=ang+(Math.random()-0.5)*1.4;
+          path.moveTo(x,y);
+          path.lineTo(x+Math.cos(bAng)*(14+Math.random()*28), y+Math.sin(bAng)*(14+Math.random()*28));
+          path.moveTo(x,y);
+        }
+      }
+      lavaCracks.push({path:path, g:0.3+Math.random()*0.7, s:Math.random()*6.28, width:1.6+Math.random()*3});
+    }
+  }
   function drawScene(type){
     var b=animColor(curAnim);
-    if(type==='lava'){ // магма: трещины снизу с лавовым свечением
-      sceneT+=0.02;
-      var g=cx.createLinearGradient(0,ch*0.6,0,ch);
-      g.addColorStop(0,'rgba('+b.r+','+b.g+','+b.b+',0)');
-      g.addColorStop(1,'rgba('+b.r+','+b.g+','+b.b+',0.55)');
-      cx.fillStyle=g; cx.fillRect(0,ch*0.6,cw,ch*0.4);
-      // трещины
-      for(var k=0;k<6;k++){ var y=ch - (k%3)*14 - 14; cx.beginPath(); cx.moveTo(k*180-40,y); cx.lineTo(k*180+40,y+Math.sin(sceneT*2+k)*8); cx.strokeStyle='rgba('+Math.min(255,b.r*1.4|0)+',60,0,'+(0.7+0.3*Math.sin(sceneT*3+k))+')'; cx.lineWidth=3; cx.stroke(); }
-      // пузыри лавы
-      cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+',0.8)';
-      for(var kb=0;kb<8;kb++){ var bx=kb*130+((sceneT*40)%10); var by=ch-20-Math.abs(Math.sin(sceneT*2+kb))*30; cx.beginPath(); cx.arc(bx,by,3+Math.sin(sceneT*4+kb)*2,0,6.2832); cx.fill(); }
+    if(type==='lava'){ // магма: тёмная корка по всей высоте + сеть светящихся трещин (жёлтый центр → оранжевые/красные края)
+      sceneT+=0.05;
+      if(lavaCracks===null) buildLavaCracks();
+      // затемняем фон почти до чёрного (тёмная кора)
+      cx.fillStyle='rgba(10,6,8,0.35)'; cx.fillRect(0,0,cw,ch);
+      var pulse=0.6+0.3*Math.sin(sceneT*1.5);
+      // рисуем сеть трещин: внешний «ореол» + светлое ядро
+      for(var ck=0;ck<lavaCracks.length;ck++){
+        var cr=lavaCracks[ck];
+        var glow=(cr.g+Math.sin(sceneT*2+cr.s))*pulse;
+        var wr=cr.width*(0.6+0.4*Math.abs(Math.sin(sceneT*1.2+cr.s)));
+        // внешняя красная/оранжевая кайма (толще)
+        cx.strokeStyle='rgba(255,'+(30+glow*60|0)+',0,'+(0.28+0.16*glow).toFixed(3)+')';
+        cx.lineWidth=wr*3.2; cx.stroke(cr.path);
+        // основная оранжевая линия
+        cx.strokeStyle='rgba(255,'+(80+glow*90|0)+',20,'+(0.6+0.25*glow).toFixed(3)+')';
+        cx.lineWidth=wr*1.6; cx.stroke(cr.path);
+        // яркое ядро (жёлтое/белое)
+        cx.strokeStyle='rgba(255,'+(200+glow*50|0)+','+(90+glow*60|0)+',0.95)';
+        cx.lineWidth=wr*(0.5+0.3*Math.sin(sceneT*2.6+cr.s)); cx.stroke(cr.path);
+      }
+      // тёплое свечение у трещин
+      var hg=cx.createRadialGradient(cw/2,ch*0.6,10,cw/2,ch*0.6,Math.max(cw,ch)*0.7);
+      hg.addColorStop(0,'rgba(255,90,20,'+(0.06+0.05*Math.sin(sceneT)).toFixed(3)+')');
+      hg.addColorStop(1,'rgba(255,60,0,0)');
+      cx.fillStyle=hg; cx.fillRect(0,0,cw,ch);
+      // редкие пузыри лавы в нижней части
+      cx.fillStyle='rgba(255,150,40,0.8)';
+      for(var kb=0;kb<10;kb++){ var bx=((lavaSeeds[kb]||0)+sceneT*40)%(cw+60)-30; var by=ch-20-Math.abs(Math.sin(sceneT*1.5+kb))*50; cx.beginPath(); cx.arc(bx,by,(3+Math.sin(sceneT*4+kb)*2),0,6.2832); cx.fill(); }
       return;
     }
     if(type==='wave'){ // прилив: накат волн снизу
@@ -2059,7 +2139,138 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     gg.addColorStop(1,'rgba('+b.r+','+b.g+','+b.b+',0.18)');
     cx.fillStyle=gg; cx.fillRect(0,0,cw,ch);
   }
-  function draw(){
+  function drawShape(p, shape, col, a, base){
+  // рисует тематическую фигуру по названию анимации (центр в 0,0, масштаб p.r)
+  var R=p.r;
+  if(shape==='fish'){ // рыбка
+    var s=R*0.9, dir=p.dir||1;
+    cx.scale(dir,1);
+    p.flick=(p.flick||0)+0.18;
+    cx.beginPath(); cx.moveTo(-s*1.1,0); cx.lineTo(-s*1.8,-s*0.6*Math.sin(p.flick)); cx.lineTo(-s*1.8,s*0.6*Math.sin(p.flick)); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.ellipse(0,0,s,s*0.62,0,0,6.2832); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.moveTo(-s*0.2,-s*0.4); cx.lineTo(-s*0.5,-s*0.9*Math.sin(p.flick)); cx.lineTo(s*0.2,-s*0.4); cx.closePath(); cx.fillStyle='rgba(0,0,0,0.25)'; cx.fill();
+    cx.beginPath(); cx.arc(s*0.55,-s*0.12,s*0.16,0,6.2832); cx.fillStyle='rgba(0,0,0,0.6)'; cx.fill();
+  }
+  else if(shape==='star'){ // 5-лучевая звезда
+    for(var s=0;s<5;s++){ cx.rotate(Math.PI*2/5); cx.beginPath(); cx.moveTo(0,-R*2.2); cx.lineTo(R*0.4,0); cx.lineTo(0,R*0.65); cx.lineTo(-R*0.4,0); cx.closePath(); cx.fillStyle=col; cx.fill(); }
+  }
+  else if(shape==='snow'){ // снежинка 6 лучей
+    for(var k=0;k<6;k++){ cx.rotate(Math.PI/3); cx.beginPath(); cx.moveTo(0,0); cx.lineTo(0,-R*2.2); cx.strokeStyle=col; cx.lineWidth=1.3; cx.stroke(); }
+  }
+  else if(shape==='drop'){ // капля
+    cx.beginPath(); cx.moveTo(0,-R); cx.bezierCurveTo(R*1,R*0.1,R*0.6,R*1,0,R*1); cx.bezierCurveTo(-R*0.6,R*1,-R*1,R*0.1,0,-R); cx.closePath(); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='flame'){ // язычок пламени
+    cx.beginPath(); cx.moveTo(0,p.flick||0); cx.quadraticCurveTo(-R*1,-R*0.8,0,-R*1.8); cx.quadraticCurveTo(R*1,-R*0.8,0,p.flick||0); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.moveTo(0,R*0.2); cx.quadraticCurveTo(-R*0.5,-R*0.4,0,-R*1); cx.quadraticCurveTo(R*0.5,-R*0.4,0,R*0.2); cx.closePath(); cx.fillStyle='rgba(255,255,220,'+(a*0.6).toFixed(3)+')'; cx.fill();
+  }
+  else if(shape==='bubble'||shape==='orb'){ // пузырь/сфера
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.3; cx.stroke();
+    cx.beginPath(); cx.arc(-R*0.3,-R*0.3,R*0.28,0,6.2832); cx.fillStyle='rgba(255,255,255,'+(a*0.5).toFixed(3)+')'; cx.fill();
+  }
+  else if(shape==='spark'){ // четырёхлучевая искра
+    for(var sv=0;sv<2;sv++){ cx.rotate(Math.PI/2); cx.beginPath(); cx.moveTo(0,-R*1.6); cx.quadraticCurveTo(R*0.2,0,0,R*1.6); cx.quadraticCurveTo(-R*0.2,0,0,-R*1.6); cx.fillStyle=col; cx.fill(); }
+  }
+  else if(shape==='dust'){ // пылинка венчиком
+    cx.beginPath(); cx.arc(0,0,R*0.4,0,6.2832); cx.fillStyle=col; cx.fill();
+    for(var dv=0;dv<3;dv++){ cx.rotate(Math.PI/1.5); cx.beginPath(); cx.moveTo(0,-R); cx.lineTo(R*0.3,-R*0.4); cx.lineTo(-R*0.3,-R*0.4); cx.closePath(); cx.fillStyle=col; cx.fill(); }
+  }
+  else if(shape==='bug'||shape==='fly'){ // жук с крыльями
+    cx.beginPath(); cx.arc(0,0,R*0.7,0,6.2832); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.ellipse(-R*0.7,-R*0.1,R*0.6,R*0.3,p.tw+0.4,0,6.2832); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.ellipse(R*0.7,-R*0.1,R*0.6,R*0.3,p.tw-0.4,0,6.2832); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='spiral'){ // водоворот — закрученная линия
+    for(var i2=0;i2<6;i2++){ var an=i2/6*6.2832; cx.beginPath(); cx.arc(Math.cos(an)*R*1.4,Math.sin(an)*R*1.4,R*0.5,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.3; cx.stroke(); }
+  }
+  else if(shape==='petal'){ // лепесток
+    cx.beginPath(); cx.ellipse(0,-R*0.6,R*0.7,R*1.4,p.tw,0,6.2832); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='meteor'){ // комета с хвостом
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.moveTo(-R,-R*0.4); cx.lineTo(-R*4,0); cx.lineTo(-R,R*0.4); cx.closePath(); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.5).toFixed(3)+')'; cx.fill();
+  }
+  else if(shape==='wisp'||shape==='cloud'){ // клуб дыма
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.5).toFixed(3)+')'; cx.fill();
+    cx.beginPath(); cx.arc(R*0.7,-R*0.4,R*0.7,0,6.2832); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.45).toFixed(3)+')'; cx.fill();
+    cx.beginPath(); cx.arc(-R*0.7,-R*0.3,R*0.6,0,6.2832); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.4).toFixed(3)+')'; cx.fill();
+  }
+  else if(shape==='echo'||shape==='wave'){ // кольца
+    cx.beginPath(); cx.arc(0,0,R*(0.8+0.6*Math.sin(p.tw)),0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.5; cx.stroke();
+  }
+  else if(shape==='scythe'){ // коса Жертвы
+    cx.rotate(p.tw*0.5);
+    // лезвие косы
+    cx.beginPath(); cx.arc(R*0.8,R*0.2,R*1.3,-Math.PI*0.85,Math.PI*0.15); cx.strokeStyle=col; cx.lineWidth=R*0.4; cx.stroke();
+    // рукоять
+    cx.beginPath(); cx.moveTo(R*0.6,-R*0.3); cx.lineTo(-R*1.6,R*1.2); cx.strokeStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.8).toFixed(3)+')'; cx.lineWidth=R*0.22; cx.stroke();
+    // капли крови
+    cx.beginPath(); cx.arc(R*1.6,R*1.1,R*0.28,0,6.2832); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='dream'){ // сон — звезда + ореол
+    cx.beginPath(); cx.arc(0,0,R*2,0,6.2832); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.2).toFixed(3)+')'; cx.fill();
+    for(var s2=0;s2<5;s2++){ cx.rotate(Math.PI*2/5); cx.beginPath(); cx.moveTo(0,-R*1.4); cx.lineTo(R*0.25,0); cx.lineTo(0,R*0.4); cx.lineTo(-R*0.25,0); cx.closePath(); cx.fillStyle=col; cx.fill(); }
+  }
+  else if(shape==='cross'){ // перевёрнутый крест
+    cx.fillStyle=col; cx.fillRect(-R*0.4,-R*1.5,R*0.8,R*3); cx.fillRect(-R*1.5,-R*0.4,R*3,R*0.8);
+  }
+  else if(shape==='bone'){ // кость — две косточки
+    cx.fillStyle=col;
+    cx.save(); cx.rotate(Math.PI/4);
+    cx.fillRect(-R*0.4,-R*1.4,R*0.8,R*2.8);
+    cx.beginPath(); cx.arc(-R*0.5,-R*1.2,R*0.5,0,6.2832); cx.fill(); cx.beginPath(); cx.arc(R*0.5,-R*1.2,R*0.5,0,6.2832); cx.fill();
+    cx.beginPath(); cx.arc(-R*0.5,R*1.2,R*0.5,0,6.2832); cx.fill(); cx.beginPath(); cx.arc(R*0.5,R*1.2,R*0.5,0,6.2832); cx.fill();
+    cx.restore();
+  }
+  else if(shape==='ghost'){ // призрак
+    cx.beginPath(); cx.arc(0,-R*0.2,R*0.8,Math.PI,0); cx.lineTo(R*0.8,R*0.7); cx.lineTo(R*0.4,R*0.4); cx.lineTo(0,R*0.7); cx.lineTo(-R*0.4,R*0.4); cx.lineTo(-R*0.8,R*0.7); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.arc(-R*0.35,-R*0.1,R*0.15,0,6.2832); cx.fillStyle='rgba(0,0,0,0.7)'; cx.fill();
+    cx.beginPath(); cx.arc(R*0.35,-R*0.1,R*0.15,0,6.2832); cx.fillStyle='rgba(0,0,0,0.7)'; cx.fill();
+  }
+  else if(shape==='tear'){ // слеза
+    cx.beginPath(); cx.ellipse(0,0,R*0.7,R*1.1,p.tw,0,6.2832); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='bolt'){ // молния
+    cx.beginPath(); cx.moveTo(p.l*0.1,-R*1.5); cx.lineTo(-R*0.5,0); cx.lineTo(R*0.1,0); cx.lineTo(-R*0.1,R*1.5); cx.lineTo(R*0.6,0); cx.lineTo(-R*0.1,0); cx.closePath(); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='glow'){ // свечение
+    var gr=cx.createRadialGradient(0,0,0,0,0,R*2.2);
+    gr.addColorStop(0,col); gr.addColorStop(1,'rgba('+base.r+','+base.g+','+base.b+',0)');
+    cx.beginPath(); cx.arc(0,0,R*2.2,0,6.2832); cx.fillStyle=gr; cx.fill();
+  }
+  else if(shape==='coin'){ // монета
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
+    cx.strokeStyle='rgba(120,80,0,0.7)'; cx.lineWidth=1.2; cx.stroke();
+    cx.beginPath(); cx.arc(0,0,R*0.5,0,6.2832); cx.strokeStyle='rgba(255,220,120,0.8)'; cx.lineWidth=1; cx.stroke();
+  }
+  else if(shape==='gem'||shape==='shard'){ // граненый камень
+    cx.beginPath(); cx.moveTo(0,-R*1.2); cx.lineTo(R*0.9,-R*0.3); cx.lineTo(R*0.5,R*1.1); cx.lineTo(-R*0.5,R*1.1); cx.lineTo(-R*0.9,-R*0.3); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.strokeStyle='rgba(255,255,255,'+(a*0.4).toFixed(3)+')'; cx.lineWidth=1; cx.stroke();
+  }
+  else if(shape==='hole'){ // тёмный вихрь-провал
+    var hg=cx.createRadialGradient(0,0,0,0,0,R*1.8);
+    hg.addColorStop(0,'rgba(0,0,0,0.9)'); hg.addColorStop(0.6,col); hg.addColorStop(1,'rgba('+base.r+','+base.g+','+base.b+',0)');
+    cx.beginPath(); cx.arc(0,0,R*1.8,0,6.2832); cx.fillStyle=hg; cx.fill();
+  }
+  else if(shape==='ray'){ // луч света
+    cx.fillStyle=col; cx.fillRect(-R*0.3,-R*2.4,R*0.6,R*4.8);
+  }
+  else if(shape==='leaf'){ // лист
+    cx.beginPath(); cx.moveTo(0,-R); cx.quadraticCurveTo(R*1,R*0.2,0,R*1); cx.quadraticCurveTo(-R*1,R*0.2,0,-R); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.moveTo(0,-R*0.8); cx.lineTo(0,R*0.8); cx.strokeStyle='rgba(60,60,0,0.5)'; cx.lineWidth=1; cx.stroke();
+  }
+  else if(shape==='brim'){ // столб огня
+    cx.beginPath(); cx.moveTo(-R*0.6,R); cx.lineTo(0,-R*2.4); cx.lineTo(R*0.6,R); cx.closePath(); cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.moveTo(-R*0.3,R); cx.lineTo(0,-R*1.6); cx.lineTo(R*0.3,R); cx.closePath(); cx.fillStyle='rgba(255,255,220,0.7)'; cx.fill();
+  }
+  else if(shape==='heart'){ // сердце
+    cx.beginPath(); cx.moveTo(0,R*0.6); cx.bezierCurveTo(-R*1.3,-R*0.5,-R*0.6,-R*1.5,0,-R*0.6); cx.bezierCurveTo(R*0.6,-R*1.5,R*1.3,-R*0.5,0,R*0.6); cx.fillStyle=col; cx.fill();
+  }
+  else { // фолбэк — круглая частица
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
+  }
+}
+function draw(){
     cx.clearRect(0,0,cw,ch);
     var mode=curAnim, base=animColor(mode);
     var spec=anims.filter(function(a){return a.id===mode;})[0]||{}, type=spec.type||'rise';
@@ -2087,105 +2298,16 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       if(a<0)a=0; if(a>1)a=1;
       var col='rgba('+base.r+','+base.g+','+base.b+','+a.toFixed(3)+')';
       cx.save(); cx.translate(p.x,p.y);
-      if(type==='rain'){ cx.rotate(p.tw); cx.beginPath(); cx.moveTo(0,-7); cx.lineTo(0,7); cx.strokeStyle=col; cx.lineWidth=1.6; cx.stroke(); cx.restore(); continue; }
-      if(type==='snow'){ // снежинка: 6 лучей
-        for(var k=0;k<6;k++){ cx.rotate(Math.PI/3); cx.beginPath(); cx.moveTo(0,0); cx.lineTo(0,p.r*2.2); cx.strokeStyle=col; cx.lineWidth=1.2; cx.stroke(); }
-        cx.restore(); continue;
-      }
-      if(type==='bolt'){ // зигзаг молнии
-        cx.beginPath(); cx.moveTo(0,0); cx.lineTo(p.r,-p.r*1.5); cx.lineTo(-p.r*0.5,-p.r); cx.lineTo(p.r*0.8,-p.r*2.4); cx.strokeStyle=col; cx.lineWidth=2; cx.stroke(); cx.restore(); continue;
-      }
-      if(type==='bubbles'){ // пузырь с ободком
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.4; cx.stroke();
-        cx.beginPath(); cx.arc(-p.r*0.3,-p.r*0.3,p.r*0.25,0,6.2832); cx.fillStyle='rgba(255,255,255,'+(a*0.7).toFixed(3)+')'; cx.fill(); cx.restore(); continue;
-      }
-if(type==='shard'){
-        if(p.falling){
-          cx.rotate(p.rot||0);
-          cx.beginPath(); for(var sh=0;sh<6;sh++){ var an=sh*Math.PI/3; var rr=sh%2? p.r:p.r*0.7; if(sh===0)cx.moveTo(Math.cos(an)*rr,Math.sin(an)*rr); else cx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr); } cx.closePath();
-          cx.fillStyle=col; cx.fill();
-          cx.strokeStyle='rgba(255,255,255,'+(a*0.5).toFixed(3)+')'; cx.lineWidth=1; cx.stroke();
-        } else if(p.shat<0.85){
-          cx.rotate(p.rot||0);
-          if(!p.shards){
-            p.shards=[]; for(var o=0;o<7;o++){ var ang=(o/7)*6.2832+Math.random(); p.shards.push({a:ang,d:(1+Math.random()*2.5)*8}); }
-          }
-          for(var oi=0;oi<p.shards.length;oi++){ var s2=p.shards[oi]; var dx=Math.cos(s2.a)*s2.d*p.shat, dy=Math.sin(s2.a)*s2.d*p.shat + p.shat*p.shat*40; cx.beginPath(); cx.moveTo(dx-2,dy-1); cx.lineTo(dx-1,dy+2); cx.lineTo(dx+3,dy+1); cx.closePath(); cx.fillStyle=col; cx.fill(); }
+      cx.rotate(type==='rain'?p.tw:(p.tw*0.3));
+      var shape=spec.shape||'dot';
+      if(shape==='shard' && type==='shard' && !p.falling){ // аметист: осколки после разбития
+        if(p.shat<0.85){
+          if(!p.shards){ p.shards=[]; for(var o=0;o<7;o++){ var ang=(o/7)*6.2832+Math.random(); p.shards.push({a:ang,d:(1+Math.random()*2.5)*8}); } }
+          for(var oi=0;oi<p.shards.length;oi++){ var s2=p.shards[oi]; var dx=Math.cos(s2.a)*s2.d*p.shat, dy=Math.sin(s2.a)*s2.d*p.shat+p.shat*p.shat*40; cx.beginPath(); cx.moveTo(dx-2,dy-1); cx.lineTo(dx-1,dy+2); cx.lineTo(dx+3,dy+1); cx.closePath(); cx.fillStyle=col; cx.fill(); }
         }
-        cx.restore(); continue;
+      } else {
+        drawShape(p, shape, col, a, base);
       }
-      if(type==='fish'){
-        // рыбка: тело + хвост + плавник, идёт в сторону p.dir
-        var s=p.r*0.9, dir=p.dir||1;
-        cx.scale(dir,1);
-        p.flick=(p.flick||0)+0.15;
-        // хвост
-        cx.beginPath(); cx.moveTo(-s*1.1,0); cx.lineTo(-s*1.8,-s*0.6*Math.sin(p.flick)); cx.lineTo(-s*1.8,s*0.6*Math.sin(p.flick)); cx.closePath(); cx.fillStyle=col; cx.fill();
-        // тело
-        cx.beginPath(); cx.ellipse(0,0,s,s*0.62,0,0,6.2832); cx.fillStyle=col; cx.fill();
-        // плавник
-        cx.beginPath(); cx.moveTo(-s*0.2,-s*0.4); cx.lineTo(-s*0.5,-s*0.9*Math.sin(p.flick)); cx.lineTo(s*0.2,-s*0.4); cx.closePath(); cx.fillStyle='rgba(0,0,0,0.25)'; cx.fill();
-        // глаз
-        cx.beginPath(); cx.arc(s*0.55,-s*0.12,s*0.16,0,6.2832); cx.fillStyle='rgba(0,0,0,0.6)'; cx.fill();
-        cx.restore(); continue;
-      }
-      if(type==='fire'){ // языки: треугольники вверх
-        cx.beginPath(); cx.moveTo(0,p.r); cx.lineTo(-p.r*0.7,-p.r*0.8); cx.lineTo(p.r*0.7,-p.r*0.8); cx.closePath(); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='vortex'){ // спиральные точки вращаются
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='swarm'){ // маленькие жучки с крылом
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill();
-        cx.beginPath(); cx.ellipse(p.r*0.8,-p.r*0.4,p.r*0.7,p.r*0.35,p.tw,0,6.2832); cx.fillStyle='rgba(0,0,0,0.4)'; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='meteor'){ // падающий с хвостом
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill();
-        cx.beginPath(); cx.moveTo(-p.r,-p.r*0.5); cx.lineTo(-p.r*4,0); cx.lineTo(-p.r,-p.r*0.5); cx.lineTo(-p.r-1,-p.r*0.3); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.4).toFixed(3)+')'; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='glow'){ // большая пульсирующая сфера
-        var gr=cx.createRadialGradient(0,0,0,0,0,p.r*3);
-        gr.addColorStop(0,col); gr.addColorStop(1,'rgba('+base.r+','+base.g+','+base.b+',0)');
-        cx.beginPath(); cx.arc(0,0,p.r*3,0,6.2832); cx.fillStyle=gr; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='echo'){ // расширяющиеся кольца
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.5; cx.stroke(); cx.restore(); continue;
-      }
-      if(type==='wave'){ // волна: косинусные точки двигаются по синусоиде
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='chaos'){ // квадратики
-        cx.fillStyle=col; cx.fillRect(-p.r,-p.r,p.r*2,p.r*2); cx.restore(); continue;
-      }
-      if(type==='drift'){ // мягкие размытые пятна
-        var gr2=cx.createRadialGradient(0,0,0,0,0,p.r*2);
-        gr2.addColorStop(0,col); gr2.addColorStop(1,'rgba('+base.r+','+base.g+','+base.b+',0)');
-        cx.beginPath(); cx.arc(0,0,p.r*2,0,6.2832); cx.fillStyle=gr2; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='heart'){ // сердца
-        cx.beginPath(); cx.moveTo(0,p.r*0.6); cx.bezierCurveTo(-p.r*1.2,-p.r*0.6,-p.r*0.6,-p.r*1.4,0,-p.r*0.6); cx.bezierCurveTo(p.r*0.6,-p.r*1.4,p.r*1.2,-p.r*0.6,0,p.r*0.6); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='ring'){ // расходящиеся кольца
-        cx.beginPath(); cx.arc(0,0,p.r*(0.8+0.5*Math.sin(p.tw)),0,6.2832); cx.strokeStyle=col; cx.lineWidth=1.3; cx.stroke(); cx.restore(); continue;
-      }
-      if(type==='cross'){ // кресты
-        cx.fillStyle=col; cx.fillRect(-p.r*0.35,-p.r*1.3,p.r*0.7,p.r*2.6); cx.fillRect(-p.r*1.3,-p.r*0.35,p.r*2.6,p.r*0.7); cx.restore(); continue;
-      }
-      if(type==='orb'){ // орбы с двойным контуром
-        cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill(); cx.beginPath(); cx.arc(0,0,p.r*0.45,0,6.2832); cx.fillStyle='rgba(0,0,0,0.35)'; cx.fill(); cx.restore(); continue;
-      }
-      if(type==='spark'){ // искры-звёзды (4 луча)
-        for(var kv=0;kv<4;kv++){ cx.rotate(Math.PI/2); cx.beginPath(); cx.moveTo(0,-p.r*1.5); cx.lineTo(p.r*0.2,0); cx.lineTo(0,p.r*1.5); cx.lineTo(-p.r*0.2,0); cx.closePath(); cx.fillStyle=col; cx.fill(); } cx.restore(); continue;
-      }
-      if(type==='beam'){ // вертикальные лучи
-        cx.fillStyle=col; cx.fillRect(-p.r*0.3,-p.r*2.2,p.r*0.6,p.r*4.4); cx.restore(); continue;
-      }
-      if(type==='petal'){ // лепестки
-        cx.beginPath(); cx.ellipse(0,-p.r,p.r,p.r*1.6,p.tw,0,6.2832); cx.fillStyle=col; cx.fill(); cx.restore(); continue;
-      }
-      // rise (по умолчанию): светящаяся точка с ореолом
-      cx.beginPath(); cx.arc(0,0,p.r,0,6.2832); cx.fillStyle=col; cx.fill();
-      cx.beginPath(); cx.arc(0,0,p.r*3.2,0,6.2832); cx.fillStyle='rgba('+base.r+','+base.g+','+base.b+','+(a*0.16).toFixed(3)+')'; cx.fill();
       cx.restore();
     }
     drawBoss();
