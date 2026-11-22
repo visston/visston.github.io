@@ -258,6 +258,48 @@
   .how-body li{ position:relative; padding:6px 0 6px 26px; color:var(--dim); font-size:13.5px; line-height:1.5; }
   .how-body li::before{ content:'◆'; position:absolute; left:4px; top:6px; color:var(--red); font-size:10px; }
   .how-body li b{ color:var(--txt); }
+
+  /* ===== Окно «Профиль» ===== */
+  .prof-overlay{ position:fixed; inset:0; background:rgba(4,4,8,0.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:250; }
+  .prof-overlay.open{ display:flex; animation:fadeIn .2s ease; }
+  .prof-box{ width:min(420px,92vw); background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--border); border-radius:20px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.03), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px var(--red-dim);
+    overflow:hidden; animation:popIn .22s cubic-bezier(.2,.9,.3,1.2); }
+  .prof-head{ display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .prof-head .ic{ width:40px;height:40px;border-radius:12px; background:var(--red); color:#fff; display:flex;align-items:center;justify-content:center; font-size:20px; box-shadow:0 4px 14px var(--red-dim); }
+  .prof-head .t{ font:700 18px Georgia,serif; color:var(--gold); }
+  .prof-head .x{ margin-left:auto; background:transparent;border:none;color:var(--dim);font-size:20px;cursor:pointer; }
+  .prof-body{ padding:22px; }
+  .prof-field{ margin-bottom:14px; }
+  .prof-field label{ display:block; font-size:12px; color:var(--dim); margin-bottom:6px; }
+  .prof-field input{ width:100%; background:var(--panel); border:1px solid #2e2e3a; color:var(--txt); padding:11px 14px; border-radius:11px; font-size:14px; outline:none; }
+  .prof-field input:focus{ border-color:var(--red); }
+  .prof-info{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:16px; font-size:13px; color:var(--dim); }
+  .prof-info b{ color:var(--txt); }
+  .prof-actions{ display:flex; gap:10px; }
+  .prof-actions .btn{ flex:1; padding:12px; border:none; border-radius:11px; font-size:14px; font-weight:600; cursor:pointer; }
+  .prof-actions .btn.save{ background:var(--red); color:#fff; box-shadow:0 4px 14px var(--red-dim); }
+  .prof-actions .btn.save:hover{ background:var(--red-bright); }
+  .prof-status{ margin-top:12px; font-size:12px; color:var(--gold); text-align:center; min-height:16px; }
+
+  /* ===== Окно «История обновлений» ===== */
+  .cl-overlay{ position:fixed; inset:0; background:rgba(4,4,8,0.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:260; }
+  .cl-overlay.open{ display:flex; animation:fadeIn .2s ease; }
+  .cl-box{ width:min(640px,94vw); background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--border); border-radius:20px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.03), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px var(--red-dim);
+    overflow:hidden; animation:popIn .22s cubic-bezier(.2,.9,.3,1.2); max-height:88vh; overflow-y:auto; }
+  .cl-head{ display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); }
+  .cl-head .ic{ width:40px;height:40px;border-radius:12px; background:var(--red); color:#fff; display:flex;align-items:center;justify-content:center; font-size:20px; box-shadow:0 4px 14px var(--red-dim); }
+  .cl-head .t{ font:700 18px Georgia,serif; color:var(--gold); }
+  .cl-head .x{ margin-left:auto; background:transparent;border:none;color:var(--dim);font-size:20px;cursor:pointer; }
+  .cl-head .x:hover{ color:var(--red-bright); }
+  .cl-body{ padding:20px 22px; }
+  .cl-version{ margin-bottom:16px; border-left:3px solid var(--red); padding-left:14px; }
+  .cl-version .v{ color:var(--red-bright); font:700 15px Georgia; letter-spacing:1px; }
+  .cl-version .d{ color:var(--dim); font-size:12px; margin:2px 0 6px; }
+  .cl-version ul{ list-style:none; }
+  .cl-version li{ position:relative; padding:3px 0 3px 20px; color:var(--dim); font-size:13px; line-height:1.5; }
+  .cl-version li::before{ content:'•'; position:absolute; left:4px; color:var(--red); }
 </style>
 </head>
 <body>
@@ -276,6 +318,10 @@
     <option value="ru">🇷🇺 RU</option>
     <option value="en">🇬🇧 EN</option>
   </select>
+  <button class="ctl" id="profileBtn" title="Мой профиль">👤 Профиль</button>
+  <button class="ctl" id="changelogBtn" title="История обновлений">📜 Обновления</button>
+  <a class="link" href="https://www.twitch.tv/visstom" target="_blank" title="Мой Twitch">📺</a>
+  <a class="link" href="https://discord.com/users/visston" target="_blank" title="Мой Discord">💬</a>
   <a class="link" href="index.html">Главная</a>
   <a class="link" href="isaac.html">Isaac</a>
   <a class="link" href="links.html">Ссылки</a>
@@ -361,6 +407,18 @@
             <button type="button" class="ipick" data-ic="🤖" title="ИИ">🤖</button>
             <button type="button" class="ipick" data-ic="💎" title="Крипта/бонус">💎</button>
             <button type="button" class="ipick" data-ic="⭐" title="Избранное">⭐</button>
+            <button type="button" class="ipick" data-ic="📷" title="Фото">📷</button>
+            <button type="button" class="ipick" data-ic="🎵" title="Музыка">🎵</button>
+            <button type="button" class="ipick" data-ic="🎨" title="Арт/творчество">🎨</button>
+            <button type="button" class="ipick" data-ic="📞" title="Звонки">📞</button>
+            <button type="button" class="ipick" data-ic="✉️" title="Почта">✉️</button>
+            <button type="button" class="ipick" data-ic="🗺️" title="Карты">🗺️</button>
+            <button type="button" class="ipick" data-ic="📰" title="Новости">📰</button>
+            <button type="button" class="ipick" data-ic="☁️" title="Облако">☁️</button>
+            <button type="button" class="ipick" data-ic="🗂️" title="Файлы">🗂️</button>
+            <button type="button" class="ipick" data-ic="⚙️" title="Настройки">⚙️</button>
+            <button type="button" class="ipick" data-ic="🛠️" title="Инструменты">🛠️</button>
+            <button type="button" class="ipick" data-ic="💰" title="Деньги">💰</button>
           </div>
         </div>
         <div class="m-field">
@@ -402,19 +460,27 @@
         <div class="why-reasons">
           <div class="why-reason">
             <span class="ri">🎨</span>
-            <div><b>Оформление под твой вкус</b><p>32 темы — каждый персонаж Isaac и его Проклятая версия со своим цветом, фоном и анимацией. Живые частицы подстраиваются под выбранную тему.</p></div>
+            <div><b>Оформление под твой вкус</b><p>45 тем — персонажи Isaac и их Проклятые версии, плюс локации и атмосферные палитры. Живой фон с частицами подстраивается под выбранную тему.</p></div>
           </div>
           <div class="why-reason">
             <span class="ri">🤖</span>
-            <div><b>Встроенный ИИ</b><p>Общайся с ассистентом VISSTON AI прямо на сайте, не уходя никуда. Бесплатно, несколько моделей на выбор.</p></div>
+            <div><b>Встроенный ИИ</b><p>VISSTON AI прямо на сайте: отвечает на твоём языке и умеет рисовать картинки по описанию. Бесплатно и без регистрации.</p></div>
           </div>
           <div class="why-reason">
             <span class="ri">🚀</span>
-            <div><b>Всё под рукой</b><p>Быстрый поиск, поиск по картинке, свои плитки-ссылки, заметки с автосохранением и «последнее открытое» в один клик.</p></div>
+            <div><b>Всё под рукой</b><p>Быстрый поиск, поиск по картинке, свои плитки с готовыми иконками или своей картинкой, заметки с автосохранением и «последнее открытое» в один клик.</p></div>
+          </div>
+          <div class="why-reason">
+            <span class="ri">🌍</span>
+            <div><b>На разных языках</b><p>Интерфейс можно переключить на русский или английский, а ИИ отвечает на языке, на котором пишешь ты.</p></div>
           </div>
           <div class="why-reason">
             <span class="ri">🔒</span>
-            <div><b>Приватность и лёгкость</b><p>Работает прямо в браузере, данные хранятся локально, ничего не отправляется на чужие серверы. Быстро и без установок.</p></div>
+            <div><b>Приватность и лёгкость</b><p>Работает прямо в браузере, твои данные хранятся локально на устройстве. Быстро, без установок и лишних серверов.</p></div>
+          </div>
+          <div class="why-reason">
+            <span class="ri">💬</span>
+            <div><b>Ты можешь влиять на сайт</b><p>Предложения и баги уходят напрямую разработчику в Discord — твоё мнение реально помогает сайту расти.</p></div>
           </div>
         </div>
       </div>
@@ -485,6 +551,117 @@
         <ul>
           <li>Зажми <b>Alt</b> и кликни по ссылке — адрес скопируется, чтобы вставить в приватное окно.</li>
         </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Окно «Профиль» -->
+  <div class="prof-overlay" id="profOverlay">
+    <div class="prof-box">
+      <div class="prof-head">
+        <span class="ic">👤</span>
+        <span class="t">Мой профиль</span>
+        <button type="button" class="x" id="profClose" title="Закрыть">✕</button>
+      </div>
+      <div class="prof-body">
+        <div class="prof-info">
+          <div>Ник: <b id="profNickShown">—</b></div>
+          <div>Дата регистрации: <b id="profDateShown">—</b></div>
+        </div>
+        <div class="prof-field">
+          <label for="profNickInput">👤 Ник</label>
+          <input id="profNickInput" type="text" placeholder="Твой ник" maxlength="30" autocomplete="off">
+        </div>
+        <div class="prof-field">
+          <label for="profPassInput">🔒 Пароль (локально)</label>
+          <input id="profPassInput" type="password" placeholder="Придумай пароль" autocomplete="new-password">
+        </div>
+        <div class="prof-actions">
+          <button type="button" class="btn save" id="profSave">Сохранить</button>
+        </div>
+        <div class="prof-status" id="profStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- История обновлений -->
+  <div class="cl-overlay" id="clOverlay">
+    <div class="cl-box">
+      <div class="cl-head">
+        <span class="ic">📜</span>
+        <span class="t">История обновлений</span>
+        <button type="button" class="x" id="clClose" title="Закрыть">✕</button>
+      </div>
+      <div class="cl-body">
+        <div class="cl-version">
+          <div class="v">Версия 1.0 — запуск</div>
+          <div class="d">Начало работы над сайтом</div>
+          <ul>
+            <li>Создана стартовая страница VISSTON ✕ CAIN в стиле The Binding of Isaac.</li>
+            <li>Тёмная тема и красный акцент, каиновские обои.</li>
+            <li>Добавлены разделы «Isaac» и «Ссылки».</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.1 — настройка</div>
+          <div class="d">Первые доработки</div>
+          <ul>
+            <li>Установка и настройка под твои хотелки.</li>
+            <li>Кнопка «Почему мы» и приветствие.</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.2 — плитки и темы</div>
+          <ul>
+            <li>Свои плитки-ссылки (добавление, удаление правой кнопкой).</li>
+            <li>32 темы персонажей Isaac и их Проклятых версий.</li>
+            <li>Живой фон с частицами по цвету темы.</li>
+            <li>Кнопка «По картинке» и «Последнее открытое».</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.3 — ИИ</div>
+          <ul>
+            <li>Встроенный ИИ-чат VISSTON AI.</li>
+            <li>Генерация картинок по описанию (кнопка 🖼).</li>
+            <li>ИИ отвечает на языке пользователя.</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.4 — публикация</div>
+          <ul>
+            <li>Сайт выложен на GitHub Pages: ссылка visston.github.io.</li>
+            <li>Переименован аккаунт и репозиторий под «visston».</li>
+            <li>45 тем (локации и атмосферные палитры).</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.5 — фидбек и Discord</div>
+          <ul>
+            <li>Форма «Предложения и баги» с сохранением.</li>
+            <li>Отправка фидбеков в Discord (реально доходит).</li>
+            <li>Три канала: предложения / баги / мусор.</li>
+            <li>Фильтр спама и смысловая фильтрация мусора.</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.6 — языки и профиль</div>
+          <ul>
+            <li>Переключатель языка RU/EN.</li>
+            <li>Плашка «Профиль»: ник, дата регистрации, пароль.</li>
+            <li>Кнопки соцсетей автора (Twitch, Discord).</li>
+            <li>Больше базовых иконок для плиток (24 шт.).</li>
+          </ul>
+        </div>
+        <div class="cl-version">
+          <div class="v">Версия 1.7 — удобство</div>
+          <ul>
+            <li>Плашка «Как пользоваться сайтом».</li>
+            <li>Исправлены баги: кружки, пропажа кнопок, Alt+клик.</li>
+            <li>Проверена и расширена информация по Isaac.</li>
+            <li>Эта кнопка «История обновлений».</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -813,38 +990,53 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     if(!nick){ document.getElementById('fbStatus').textContent='Введи свой ник.'; return; }
     var isBug = (fbType==='bug');
     var status=document.getElementById('fbStatus');
-    // фильтр спама и оскорблений (по списку слов, надёжно для кириллицы)
+    // вебхуки: предложения / баги / мусор
+    var WH_IDEA='https://discord.com/api/webhooks/1574002746535845972/DGTXxn4pniGocC9-haZhYrXUlZu3zE80eT3juN8YA608N8fkN4eVA-Zb5UGdDcpl8A5z';
+    var WH_BUG='https://discord.com/api/webhooks/1574012074130936028/I5Bypt65ByuQsuetYBzshBb2qLYemVMzIhdAFx0I54UXfr3yEphuWFGjC5oeMYwquxVY';
+    var WH_SPAM='https://discord.com/api/webhooks/1574012215256813588/HFwIx-2BP_qrRLO_YvbxatGWTKrx11bpm6MeWzSNinuC97U5839iloBlx7MB8nPkPnOW';
+    // фильтр спама и оскорблений
     var BADWORDS=['пидор','лох','гандон','хуй','хуя','пизд','ебан','хуе','ебат','ебл','даун','долбоеб','мудак','сволоч','тварь','уебок','гнид','срать','сучк','бляд','шалав','проститутк','идиот','дебил','кретин','fuck','shit','nigg','bitch','asshole','dick','retard','fag','cunt','whore'];
     var low=(' '+text+' ').toLowerCase();
     var badHit=false;
     for(var bi=0; bi<BADWORDS.length; bi++){ if(low.indexOf(BADWORDS[bi])>-1){ badHit=true; break; } }
-    if(badHit){ status.textContent='Сообщение содержит оскорбления и не будет отправлено.'; return; }
-    if(text.length>600){ status.textContent='Слишком длинное сообщение.'; return; }
-    // отправка в Discord-вебхук разработчика
-    var WHURL='https://discord.com/api/webhooks/1574002746535845972/DGTXxn4pniGocC9-haZhYrXUlZu3zE80eT3juN8YA608N8fkN4eVA-Zb5UGdDcpl8A5z';
-    var payload={
-      content: '',
-      embeds: [{
-        title: isBug ? '🐞 Новый баг' : '💡 Новое предложение',
-        description: text,
-        color: isBug ? 0xFF4D4D : 0x4DA6FF,
-        author: { name: 'От: '+nick },
-        footer: { text: 'VISSTON \u00D7 CAIN · фидбек' },
-        timestamp: new Date().toISOString()
-      }]
-    };
+    // смысловая классификация: это предложение, баг или мусор?
+    var IDEA_WORDS=['предлага','хочу','добавь','добавить','добавьте','было бы','тёмн','тему','темы','функци','функц','хорошо бы','могли бы','хотел','хотелось','сделайте','сделай','улучш','интерфейс','страниц','дизайн','цвет','кнопк','плаш','иконк','назван'];
+    var BUG_WORDS=['баг','не работает','не открывается','ошибка','не грузит','сломан','не показывает','падает','крашит','не видно','не появляется','не загружается','сбой','проблем','глюк','не запускается','исчез','пропал','не сохраняет','не отправляется'];
+    function score(words){ var s=0; for(var wi=0;wi<words.length;wi++){ if(low.indexOf(words[wi])>-1) s++; } return s; }
+    var ideaScore=score(IDEA_WORDS), bugScore=score(BUG_WORDS);
+    // мусор: мало букв, длинный повтор одной буквы, или нет ни идеи, ни бага в коротком тексте
+    var letters=text.replace(/[^a-zа-яё0-9]/gi,'');
+    var uniq={}; for(var ui=0;ui<letters.length;ui++){ uniq[letters[ui]]=1; }
+    var distinctCount = Object.keys(uniq).length;
+    var allSame = letters.length>=6 && distinctCount<=2;
+    var trashByContent = (letters.length<4) || allSame || (ideaScore===0 && bugScore===0 && text.length<25);
+    function buildPayload(title,color,desc){
+      return { content:'', embeds:[{ title:title, description:desc, color:color, author:{name:'От: '+nick}, footer:{text:'VISSTON \u00D7 CAIN'}, timestamp:new Date().toISOString() }] };
+    }
     function done(ok){
       if(ok){ status.textContent = 'Доставлено в Discord разработчику. Спасибо!'; }
       else { status.textContent = 'Не удалось доставить. Проверь интернет и попробуй ещё раз.'; }
       document.getElementById('fbText').value='';
-      try{ var arr=JSON.parse(localStorage.getItem('cain_feedback')||'[]'); arr.push({type:fbType,text:text,at:new Date().toISOString(),to:'discord'}); localStorage.setItem('cain_feedback',JSON.stringify(arr)); }catch(e){}
+      try{ var arr=JSON.parse(localStorage.getItem('cain_feedback')||'[]'); arr.push({type: fbType, text:text, at:new Date().toISOString(), to: badHit?'spam':(isBug?'discord_bug':'discord')}); localStorage.setItem('cain_feedback',JSON.stringify(arr)); }catch(e){}
       setTimeout(function(){ fbOverlay.classList.remove('open'); status.textContent=''; }, 2600);
     }
-    // если вебхук не настроен — не отправляем, сообщаем
-    if(WHURL.indexOf('__DISCORD')===0){ done(false); return; }
-    fetch(WHURL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(function(r){ done(r.ok); })
-      .catch(function(){ done(false); });
+    function post(url,payload){ return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){ return r.ok; }).catch(function(){ return false; }); }
+    // если оскорбление или бессодержательный текст — в канал «мусор»
+    if(badHit || trashByContent){
+      var reason = badHit ? '🚫 Спам/оскорбление' : '🗑 Мусор (не подходит)';
+      var msg = badHit ? 'Сообщение содержит оскорбления и отправлено в мусор.' : 'Сообщение не похоже на предложение или баг и отправлено в мусор.';
+      status.textContent=msg;
+      var sp=buildPayload(reason,'0x808080',text);
+      post(WH_SPAM,sp).then(function(){ setTimeout(function(){ fbOverlay.classList.remove('open'); status.textContent=''; },2600); });
+      try{ var arr2=JSON.parse(localStorage.getItem('cain_feedback')||'[]'); arr2.push({type: badHit?'spam':'junk', text:text, at:new Date().toISOString(), to:'spam'}); localStorage.setItem('cain_feedback',JSON.stringify(arr2)); }catch(e){}
+      document.getElementById('fbText').value='';
+      return;
+    }
+    if(text.length>600){ status.textContent='Слишком длинное сообщение.'; return; }
+    var target = isBug ? WH_BUG : WH_IDEA;
+    var title = isBug ? '🐞 Новый баг' : '💡 Новое предложение';
+    var color = isBug ? 0xFF4D4D : 0x4DA6FF;
+    post(target, buildPayload(title,color,text)).then(done);
   });
 
   /* ===== Как пользоваться сайтом ===== */
@@ -852,6 +1044,42 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   document.getElementById('howBtn').addEventListener('click',function(){ howOverlay.classList.add('open'); });
   document.getElementById('howClose').addEventListener('click',function(){ howOverlay.classList.remove('open'); });
   howOverlay.addEventListener('click',function(e){ if(e.target===howOverlay) howOverlay.classList.remove('open'); });
+
+  /* ===== Профиль ===== */
+  var profOverlay=document.getElementById('profOverlay');
+  var profDate=(function(){ try{ return localStorage.getItem('cain_regdate')||''; }catch(e){ return ''; } })();
+  function profRefresh(){
+    var nick=(function(){ try{ return localStorage.getItem('cain_nick')||''; }catch(e){ return ''; } })();
+    document.getElementById('profNickShown').textContent=nick||'не задан';
+    document.getElementById('profDateShown').textContent=profDate||'—';
+    document.getElementById('profNickInput').value=localStorage.getItem('cain_nick')||'';
+    document.getElementById('profPassInput').value='';
+  }
+  document.getElementById('profileBtn').addEventListener('click',function(){ profRefresh(); profOverlay.classList.add('open'); });
+  document.getElementById('profClose').addEventListener('click',function(){ profOverlay.classList.remove('open'); });
+  profOverlay.addEventListener('click',function(e){ if(e.target===profOverlay) profOverlay.classList.remove('open'); });
+
+  /* ===== История обновлений ===== */
+  var clOverlay=document.getElementById('clOverlay');
+  document.getElementById('changelogBtn').addEventListener('click',function(){ clOverlay.classList.add('open'); });
+  document.getElementById('clClose').addEventListener('click',function(){ clOverlay.classList.remove('open'); });
+  clOverlay.addEventListener('click',function(e){ if(e.target===clOverlay) clOverlay.classList.remove('open'); });
+  document.getElementById('profSave').addEventListener('click',function(){
+    var nick=document.getElementById('profNickInput').value.trim();
+    var pass=document.getElementById('profPassInput').value;
+    var st=document.getElementById('profStatus');
+    if(!nick){ st.textContent='Введи ник.'; return; }
+    try{
+      if(!localStorage.getItem('cain_nick')){ profDate=new Date().toLocaleDateString('ru-RU'); localStorage.setItem('cain_regdate',profDate); }
+      localStorage.setItem('cain_nick',nick);
+      if(pass) localStorage.setItem('cain_pass',pass);
+      userNick=nick;
+      document.getElementById('fbNick').value=nick;
+    }catch(e){}
+    st.textContent='Сохранено!';
+    profRefresh();
+    setTimeout(function(){ profOverlay.classList.remove('open'); st.textContent=''; },800);
+  });
 
   /* ===== Смена фона ===== */
   var bgs=['#0a0a0f','#100a14','#0a1408','#101218','#140a08','#0a0a1a'];
