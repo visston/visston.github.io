@@ -37,6 +37,8 @@
   .nav a.link:hover{ background:var(--panel2); color:var(--red-bright); }
   .nav button.ctl{ background:var(--panel2); border:1px solid var(--border); color:var(--txt); padding:8px 12px; border-radius:9px; font-size:13.5px; cursor:pointer; transition:.2s; }
   .nav button.ctl:hover{ border-color:var(--red); color:var(--red-bright); }
+  .nav select.ctl{ background:var(--panel2); border:1px solid var(--border); color:var(--txt); padding:8px 10px; border-radius:9px; font-size:13.5px; cursor:pointer; }
+  .nav select.ctl:focus{ outline:none; border-color:var(--red); }
   .glow{ position:fixed; width:60vmin; height:60vmin; left:50%; top:40%; transform:translate(-50%,-50%) rotate(45deg); border:2px solid var(--glow-line); pointer-events:none; z-index:0; }
   #bgCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.5; }
   main{ position:relative; z-index:1; }
@@ -270,6 +272,10 @@
   <button class="ctl" id="whyBtn" title="Почему стоит использовать наш сайт">💎 Почему мы</button>
   <button class="ctl" id="howBtn" title="Как пользоваться сайтом">❓ Как пользоваться</button>
   <button class="ctl" id="fbBtn" title="Предложения и баги">📮</button>
+  <select class="ctl lang-sel" id="langSel" title="Язык · Language">
+    <option value="ru">🇷🇺 RU</option>
+    <option value="en">🇬🇧 EN</option>
+  </select>
   <a class="link" href="index.html">Главная</a>
   <a class="link" href="isaac.html">Isaac</a>
   <a class="link" href="links.html">Ссылки</a>
@@ -429,6 +435,10 @@
           <button type="button" class="on" data-fb="idea">💡 Предложение</button>
           <button type="button" data-fb="bug">🐞 Нашёл баг</button>
         </div>
+        <div class="m-field" style="margin-bottom:10px;">
+          <label for="fbNick" style="font-size:12px;color:var(--dim);display:block;margin-bottom:6px;">👤 Ваш ник (обязательно)</label>
+          <input id="fbNick" type="text" placeholder="Например: Visston" maxlength="30" style="width:100%;background:var(--panel);border:1px solid #2e2e3a;color:var(--txt);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;">
+        </div>
         <textarea id="fbText" placeholder="Опиши идею или проблему..."></textarea>
         <div class="fb-status" id="fbStatus"></div>
         <div class="fb-actions">
@@ -503,6 +513,39 @@
   <div class="chat-tip">Бесплатный ИИ · Enter — отправить · 🖼 — нарисовать картинку по описанию</div>
 </div>
 <script>
+  /* ===== Локализация ===== */
+  var LANG_TR={
+    'RU/EN':['🇷🇺 RU','🇬🇧 EN'],
+    'nav_home':['Главная','Home'],
+    'nav_isaac':['Isaac','Isaac'],
+    'nav_links':['Ссылки','Links'],
+    'theme':['🎨 Темы','🎨 Themes'],
+    'bg':['🖼 Фон','🖼 BG'],
+    'night':['Ночь','Night'],
+    'why':['💎 Почему мы','💎 Why us'],
+    'how':['❓ Как пользоваться','❓ How to use'],
+    'search_ph':['Поиск...','Search...'],
+    'search_go':['Найти','Search'],
+    'chat_ph':['Спроси что угодно...','Ask anything...'],
+    'chat_ai':'VISSTON AI',
+    'add_btn':['Добавить','Add'],
+    'add_tile':['Новая плитка','New tile']
+  };
+  var curLang = (function(){ try{ return localStorage.getItem('cain_lang')||'ru'; }catch(e){ return 'ru'; } })();
+  function T(key){ var a=LANG_TR[key]||[key]; return a[0].length&&curLang==='en'&&a[1]? a[1] : a[0]; }
+  function applyLang(){
+    var map={
+      'nav_home':'a[href="index.html"]','nav_isaac':'a[href="isaac.html"]','nav_links':'a[href="links.html"]',
+      'theme':'#themeBtn','bg':'#bgBtn','why':'#whyBtn','how':'#howBtn'
+    };
+    for(var k in map){ var el=document.querySelector(map[k]); if(el) el.textContent=T(k); }
+    var ph=document.getElementById('q'); if(ph) ph.placeholder=T('search_ph');
+    var tb=document.querySelector('.searchbox button'); if(tb) tb.textContent=T('search_go');
+    var ci=document.getElementById('chatInput'); if(ci) ci.placeholder=T('chat_ph');
+    var li=document.getElementById('nightLbl'); if(li) li.textContent=T('night');
+    document.getElementById('langSel').value=curLang;
+    try{ localStorage.setItem('cain_lang',curLang); }catch(e){}
+  }
   function tick(){
     var n=new Date();
     var h=('0'+n.getHours()).slice(-2), m=('0'+n.getMinutes()).slice(-2);
@@ -513,6 +556,11 @@
   }
   tick(); setInterval(tick,1000);
   function dg(f){ var q=f.q.value.trim(); if(!q)return false; window.location='https://yandex.ru/search/?text='+encodeURIComponent(q); return false; }
+  // переключатель языка
+  var langSel=document.getElementById('langSel'); if(langSel){
+    langSel.addEventListener('change',function(){ curLang=langSel.value; applyLang(); });
+  }
+  applyLang();
   document.addEventListener('keydown',function(e){ if(e.altKey && e.key.toLowerCase()==='g'){ e.preventDefault(); var q=document.getElementById('q').value.trim(); if(q)window.location='https://www.google.com/search?q='+encodeURIComponent(q); } });
 
   /* ===== Поиск по картинке (📷) ===== */
@@ -735,7 +783,17 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   /* ===== Предложения и баги ===== */
   var fbOverlay=document.getElementById('fbOverlay');
   var fbType='idea';
+  // сохранённый ник пользователя (без регистрации, просто хранится в браузере)
+  var userNick=(function(){ try{ return localStorage.getItem('cain_nick')||''; }catch(e){ return ''; } })();
   document.getElementById('fbBtn').addEventListener('click',function(){
+    // если ник ещё не введён — открываем запрос ника (фидбек без ника отключён)
+    if(!userNick){
+      var asked=prompt('Предложения и баги доступны с ником.\nВведи свой ник (без регистрации):');
+      if(!asked || !asked.trim()){ return; }
+      userNick=asked.trim().substring(0,30);
+      try{ localStorage.setItem('cain_nick', userNick); }catch(e){}
+    }
+    var nickInput=document.getElementById('fbNick'); if(nickInput){ nickInput.value=userNick; nickInput.readOnly=true; }
     fbOverlay.classList.add('open'); document.getElementById('fbText').focus();
   });
   document.getElementById('fbClose').addEventListener('click',function(){ fbOverlay.classList.remove('open'); });
@@ -750,8 +808,18 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   document.getElementById('fbSend').addEventListener('click',function(){
     var text=document.getElementById('fbText').value.trim();
     if(!text){ document.getElementById('fbStatus').textContent='Поле пустое.'; return; }
+    // обязательный ник
+    var nick=document.getElementById('fbNick').value.trim();
+    if(!nick){ document.getElementById('fbStatus').textContent='Введи свой ник.'; return; }
     var isBug = (fbType==='bug');
     var status=document.getElementById('fbStatus');
+    // фильтр спама и оскорблений (по списку слов, надёжно для кириллицы)
+    var BADWORDS=['пидор','лох','гандон','хуй','хуя','пизд','ебан','хуе','ебат','ебл','даун','долбоеб','мудак','сволоч','тварь','уебок','гнид','срать','сучк','бляд','шалав','проститутк','идиот','дебил','кретин','fuck','shit','nigg','bitch','asshole','dick','retard','fag','cunt','whore'];
+    var low=(' '+text+' ').toLowerCase();
+    var badHit=false;
+    for(var bi=0; bi<BADWORDS.length; bi++){ if(low.indexOf(BADWORDS[bi])>-1){ badHit=true; break; } }
+    if(badHit){ status.textContent='Сообщение содержит оскорбления и не будет отправлено.'; return; }
+    if(text.length>600){ status.textContent='Слишком длинное сообщение.'; return; }
     // отправка в Discord-вебхук разработчика
     var WHURL='https://discord.com/api/webhooks/1574002746535845972/DGTXxn4pniGocC9-haZhYrXUlZu3zE80eT3juN8YA608N8fkN4eVA-Zb5UGdDcpl8A5z';
     var payload={
@@ -760,6 +828,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
         title: isBug ? '🐞 Новый баг' : '💡 Новое предложение',
         description: text,
         color: isBug ? 0xFF4D4D : 0x4DA6FF,
+        author: { name: 'От: '+nick },
         footer: { text: 'VISSTON \u00D7 CAIN · фидбек' },
         timestamp: new Date().toISOString()
       }]
@@ -944,7 +1013,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   // хелпер: похоже ли на баннер лимита, а не настоящий ответ
   function isLimitBanner(s){ return /free limit reached|reply every \d+ second|pollen key/i.test(s||''); }
   function tryAsk(text, model, wait, attempt){
-    var url='https://text.pollinations.ai/'+encodeURIComponent(text)+'?model='+encodeURIComponent(model)+'&system='+encodeURIComponent('Ты дружелюбный ассистент VISSTON AI на сайте. Отвечай кратко, по-русски, по делу.');
+    var url='https://text.pollinations.ai/'+encodeURIComponent(text)+'?model='+encodeURIComponent(model)+'&system='+encodeURIComponent('Ты дружелюбный ассистент VISSTON AI на сайте. Отвечай кратко и по делу. ВАЖНО: отвечай ровно на том языке, на котором написан последний запрос пользователя (русский, английский и т.д.).');
     fetch(url).then(function(r){ return r.text(); }).then(function(ans){
       if(isLimitBanner(ans) && attempt<4){
         wait.textContent = (attempt===1) ? 'Обрабатываю, секундочку…' : 'Ещё чуть-чуть…';
