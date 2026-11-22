@@ -154,6 +154,7 @@
   .theme-item.active{ border-color:var(--gold); outline:2px solid var(--gold-dim); }
   .theme-grid.items{ grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
   .theme-grid.bosses{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+  .theme-item .boss-pic{ width:40px;height:40px;object-fit:contain; }
   .boss-fx{ transition:transform .5s ease,opacity .5s ease; transform:scale(.1); opacity:0; filter:drop-shadow(0 0 24px rgba(0,0,0,.6)); line-height:1; }
   .boss-fx.in{ transform:scale(1); opacity:.92; }
   .boss-fx.out{ transform:scale(2.2) rotate(20deg); opacity:0; }
@@ -1828,7 +1829,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     {n:'Розовый', id:'pink', t:'нежные частицы', c:'#ff9ad5', type:'bubbles'},
     {n:'Абисс', id:'abyss', t:'тёмные провалы', c:'#4a3c6a', type:'drift'},
     {n:'Небесный', id:'heaven', t:'светлые лучи', c:'#fff0c0', type:'beam'},
-    {n:'Лавовый', id:'lava', t:'пузырящаяся магма', c:'#ff7a2a', type:'bubbles'},
+    {n:'Лавовый', id:'lava', t:'магма из трещин', c:'#ff7a2a', type:'lava'},
     {n:'Ледяной', id:'ice', t:'медленные кристаллы', c:'#b8ecff', type:'snow'},
     {n:'Ядовитый', id:'toxic', t:'зелёные испарения', c:'#8ae04a', type:'rise'},
     {n:'Багровый', id:'crimson', t:'тёмные капли', c:'#c82450', type:'rain'},
@@ -1873,10 +1874,66 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var spec=anims.filter(function(a){return a.id===id;})[0]; if(!spec) return accentRBG;
     var c=spec.c||'#fff'; return hexToRgb(c);
   }
+  var sceneT=0;
+  function drawScene(type){
+    var b=animColor(curAnim);
+    if(type==='lava'){ // магма: трещины снизу с лавовым свечением
+      sceneT+=0.02;
+      var g=cx.createLinearGradient(0,ch*0.6,0,ch);
+      g.addColorStop(0,'rgba('+b.r+','+b.g+','+b.b+',0)');
+      g.addColorStop(1,'rgba('+b.r+','+b.g+','+b.b+',0.55)');
+      cx.fillStyle=g; cx.fillRect(0,ch*0.6,cw,ch*0.4);
+      // трещины
+      for(var k=0;k<6;k++){ var y=ch - (k%3)*14 - 14; cx.beginPath(); cx.moveTo(k*180-40,y); cx.lineTo(k*180+40,y+Math.sin(sceneT*2+k)*8); cx.strokeStyle='rgba('+Math.min(255,b.r*1.4|0)+',60,0,'+(0.7+0.3*Math.sin(sceneT*3+k))+')'; cx.lineWidth=3; cx.stroke(); }
+      // пузыри лавы
+      cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+',0.8)';
+      for(var kb=0;kb<8;kb++){ var bx=kb*130+((sceneT*40)%10); var by=ch-20-Math.abs(Math.sin(sceneT*2+kb))*30; cx.beginPath(); cx.arc(bx,by,3+Math.sin(sceneT*4+kb)*2,0,6.2832); cx.fill(); }
+      return;
+    }
+    if(type==='wave'){ // прилив: накат волн снизу
+      sceneT+=0.03;
+      for(var w=0;w<4;w++){ var wy=ch-30-w*26+Math.sin(sceneT+w)*12; cx.beginPath(); cx.moveTo(0,wy);
+        for(var x=0;x<=cw;x+=20){ var yy=wy+Math.sin(x*0.02+sceneT*2+w*2)*10; cx.lineTo(x,yy); }
+        cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath();
+        cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+','+(0.20-w*0.045)+')'; cx.fill();
+      }
+      return;
+    }
+    if(type==='snow'){ // заснеженные холмы снизу
+      cx.fillStyle='rgba(240,248,255,0.10)';
+      cx.beginPath(); cx.moveTo(0,ch-40);
+      for(var hx=0;hx<=cw;hx+=30){ cx.lineTo(hx,ch-40-Math.abs(Math.sin(hx*0.02)*22)); }
+      cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath(); cx.fill();
+      return;
+    }
+    if(type==='fire'){ // костёр/пламя снизу: языки
+      sceneT+=0.05;
+      for(var f=0;f<10;f++){ var fx=f*120+40; var fh=40+Math.abs(Math.sin(sceneT*2+f))*50; cx.beginPath(); cx.moveTo(fx-30,ch); cx.quadraticCurveTo(fx-fh*0.4,ch-fh*0.6,fx-10,ch-fh); cx.quadraticCurveTo(fx,ch-fh+18,fx+10,ch-fh); cx.quadraticCurveTo(fx+fh*0.4,ch-fh*0.6,fx+30,ch); cx.closePath(); cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+','+(0.28+0.22*Math.abs(Math.sin(sceneT*2+f))).toFixed(3)+')'; cx.fill(); }
+      return;
+    }
+    if(type==='rain'){ // ливень: лужа снизу и разводы
+      sceneT+=0.04;
+      cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+',0.18)';
+      cx.beginPath(); cx.ellipse(cw/2,ch-18,cw*0.7,26,0,0,6.2832); cx.fill();
+      for(var rp=0;rp<9;rp++){ var rx=rp*cw/9+Math.sin(sceneT*3+rp)*30; cx.beginPath(); cx.ellipse(rx,ch-10,26,3,0,0,6.2832); cx.strokeStyle='rgba('+b.r+','+b.g+','+b.b+',0.3)'; cx.lineWidth=1; cx.stroke(); }
+      return;
+    }
+    if(type==='bubbles'){ // дно океана: волна и пузырьковый столб
+      sceneT+=0.03;
+      for(var bb=0;bb<5;bb++){ var by=ch-30-bb*30+Math.sin(sceneT*2+bb)*8; cx.beginPath(); cx.moveTo(0,by); for(var bxx=0;bxx<=cw;bxx+=24){ cx.lineTo(bxx,by+Math.sin(bxx*0.02+sceneT*3+bb)*6); } cx.lineTo(cw,ch); cx.lineTo(0,ch); cx.closePath(); cx.fillStyle='rgba('+b.r+','+b.g+','+b.b+','+(0.14-bb*0.02)+')'; cx.fill(); }
+      return;
+    }
+    // общий фон-подложка под цвет темы
+    var gg=cx.createLinearGradient(0,0,0,ch);
+    gg.addColorStop(0,'rgba('+b.r+','+b.g+','+b.b+',0.04)');
+    gg.addColorStop(1,'rgba('+b.r+','+b.g+','+b.b+',0.18)');
+    cx.fillStyle=gg; cx.fillRect(0,0,cw,ch);
+  }
   function draw(){
     cx.clearRect(0,0,cw,ch);
     var mode=curAnim, base=animColor(mode);
     var spec=anims.filter(function(a){return a.id===mode;})[0]||{}, type=spec.type||'rise';
+    drawScene(type);
     for(var i=0;i<parts.length;i++){ var p=parts[i];
       if(type==='vortex'){ p.s+=0.012; p.ang+=0.012; p.x=cw/2+Math.cos(p.ang)*p.s*(Math.min(cw,ch)*0.5); p.y=ch/2+Math.sin(p.ang)*p.s*(Math.min(cw,ch)*0.5); }
       else if(type==='echo'){ p.s+=0.008; p.r=p.s*8; p.a-=0.003; if(p.a<=0){ p.x=Math.random()*cw; p.y=Math.random()*ch; p.s=0.4; p.a=0.5; } }
@@ -2057,6 +2114,86 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   if(itemReset) itemReset.addEventListener('click',function(){ if(confirm('Сбросить весь собранный набор предметов?')){ try{ localStorage.setItem('cain_items','[]'); }catch(e){} renderItems(); } });
 
   /* ===== Каталог боссов Isaac ===== */
+  var BOSS_IMG={
+  'Blastocyst':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d5/Boss_Blastocyst_portrait.png',
+  'C.H.A.D.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/31/Boss_C.H.A.D._portrait.png',
+  'Chub':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a5/Boss_Chub_portrait.png',
+  'Dark One':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/28/Boss_Dark_One_portrait.png',
+  'Famine':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/55/Boss_Famine_portrait.png',
+  'Fistula':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ea/Boss_Fistula_portrait.png',
+  'Gemini':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/b/bf/Boss_Gemini_portrait.png',
+  'Gish':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a0/Boss_Gish_portrait.png',
+  'Gurdy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ea/Boss_Gurdy_portrait.png',
+  'Gurdy Jr.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/6/6b/Boss_Gurdy_Jr._portrait.png',
+  'Headless Horseman':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/ab/Boss_Headless_Horseman_portrait.png',
+  'Larry Jr.':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/cc/Boss_Larry_Jr._portrait.png',
+  'Loki':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/36/Boss_Loki_portrait.png',
+  'Mama Gurdy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f1/Boss_Mama_Gurdy_portrait.png',
+  'Mega Fatty':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f5/Boss_Mega_Fatty_portrait.png',
+  'Mega Satan':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/80/Boss_Mega_Satan_portrait.png',
+  'Monstro':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5d/Monstro1.png',
+  'Monstro II':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c3/Boss_Monstro_II_portrait.png',
+  'Peep':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/db/Boss_Peep_portrait.png',
+  'Pestilence':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3d/Boss_Pestilence_portrait.png',
+  'Polycephalus':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/81/Boss_Polycephalus_portrait.png',
+  'Satan':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/6/65/Boss_Satan_Hoof_ingame.png',
+  'Scolex':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/00/Boss_Scolex_portrait.png',
+  'Steven':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/cd/Boss_Steven_portrait.png',
+  'The Adversary':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/e1/Boss_The_Adversary_portrait.png',
+  'The Bloat':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d2/Boss_The_Bloat_portrait.png',
+  'The Cage':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/4a/Boss_The_Cage_portrait.png',
+  'The Fallen':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/56/Boss_The_Fallen_portrait.png',
+  'The Hollow':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f3/Boss_The_Hollow_portrait.png',
+  'The Husk':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a2/Boss_The_Husk_portrait.png',
+  'War':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/25/Boss_War_portrait.png',
+  'Baby Plum':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c5/Boss_Baby_Plum_portrait.png',
+  'Big Horn':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/58/Boss_Big_Horn_portrait.png',
+  'Brownie':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/33/Boss_Brownie_portrait.png',
+  'Chimera':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/36/Boss_Chimera_portrait.png',
+  'Conquest':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c2/Boss_Conquest_portrait.png',
+  'Daddy Long Legs':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3f/Boss_Daddy_Long_Legs_portrait.png',
+  'Dangle':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/12/Boss_Dangle_portrait.png',
+  'Delirium':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3c/Boss_Delirium_Daddy_Long_Legs_ingame.png',
+  'Dingle':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/1f/Boss_Dingle_portrait.png',
+  'Great Gideon':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/7a/Boss_Great_Gideon_portrait.png',
+  'Gurglings':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/19/Boss_Gurglings_portrait.png',
+  'Hornfel':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/eb/Boss_Hornfel_portrait.png',
+  'Hush':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/88/Boss_Hush_portrait.png',
+  'Little Horn':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/1a/Boss_Little_Horn_portrait.png',
+  'Mask of Infamy':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c4/Boss_Mask_of_Infamy_portrait.png',
+  'Mother':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/df/Boss_Mother_ingame.png',
+  'Mr. Fred':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/ad/Boss_Mr._Fred_portrait.png',
+  'Pin':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/8/87/Boss_Pin_portrait.png',
+  'Rag Man':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/33/Boss_Rag_Man_portrait.png',
+  'Rag Mega':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/52/Boss_Rag_Mega_portrait.png',
+  'Reap Creep':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/4d/Boss_Reap_Creep_portrait.png',
+  'Sisters Vis':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c4/Boss_Sisters_Vis_portrait.png',
+  'The Forsaken':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/06/Boss_The_Forsaken_portrait.png',
+  'The Frail':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/3f/Boss_The_Frail_portrait.png',
+  'The Gate':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/b/b5/Boss_The_Gate_portrait.png',
+  'The Haunt':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/0/08/Boss_The_Haunt_portrait.png',
+  'The Heretic':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/9/98/Boss_The_Heretic_portrait.png',
+  'The Matriarch':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/d/d2/Matriarchconceptart.png',
+  'The Pile':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/a3/Boss_The_Pile_portrait.png',
+  'The Rainmaker':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/3/31/Boss_The_Rainmaker_portrait.png',
+  'The Scourge':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/af/Boss_The_Scourge_portrait.png',
+  'The Stain':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/75/Boss_The_Stain_portrait.png',
+  'The Wretched':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/e9/Boss_The_Wretched_portrait.png',
+  'Triachnid':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/a/af/Boss_Triachnid_Rebirth_portrait.png',
+  'Tuff Twins':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ec/Boss_Tuff_Twins_portrait.png',
+  'Ultra Greed':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/18/Boss_Ultra_Greed_portrait.png',
+  'Wormwood':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/c/c9/Boss_Wormwood_%28Downpour%29_portrait.png',
+  'Bumbino':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/2b/Boss_Bumbino_portrait.png',
+  'Clog':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/20/Boss_Clog_portrait.png',
+  'Clutch':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/4/44/Boss_Clutch_portrait.png',
+  'Colostomia':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/e/ee/Boss_Colostomia_portrait.png',
+  'Dogma':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5d/Boss_Dogma_portrait.png',
+  'Min-Min':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/5/5b/Boss_Min-Min_portrait.png',
+  'Singe':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/7/7e/Boss_Singe_portrait.png',
+  'The Beast':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/1/15/Beast_charge.png',
+  'The Shell':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/f/f2/Boss_The_Shell_portrait.png',
+  'Turdlet':'https://static.wikia.nocookie.net/bindingofisaacre_gamepedia/images/2/2e/Boss_Turdlet_portrait.png'
+};
   var BOSSES=[
     {n:'Monstro', t:'Клетка 1', d:'Прыгает на игрока, плюётся залпами крови в шахматном порядке.', e:'😈', c:'#9c5a4a', atk:'Прыжки + залпы слёз'},
     {n:'Larry Jr.', t:'Клетка 1', d:'Сегментированный червь, ползающий по комнате.', e:'🐛', c:'#7a7a4a'},
@@ -2222,7 +2359,12 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     list.forEach(function(b){
       var d=document.createElement('div'); d.className='theme-item item';
       d.title=b.n+' — '+b.d;
-      d.innerHTML='<div class="sw" style="font-size:24px;display:flex;align-items:center;justify-content:center;color:'+b.c+';">'+b.e+'</div><div class="nm">'+b.n+'</div><div class="tt">'+b.t+'</div>';
+      var url=BOSS_IMG[b.n];
+      var inner='<div class="sw boss-sprite" style="font-size:24px;display:flex;align-items:center;justify-content:center;color:'+b.c+';">'+(url?'':'')+b.e+'</div>';
+      if(url){
+        inner='<div class="sw boss-sprite" style="display:flex;align-items:center;justify-content:center;"><img class="boss-pic" alt="'+b.n+'" src="'+url+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'+(b.e?'<span class="boss-fallback" style="font-size:24px;display:none;color:'+b.c+';">'+b.e+'</span>':'')+'</div>';
+      }
+      d.innerHTML=inner+'<div class="nm">'+b.n+'</div><div class="tt">'+b.t+'</div>';
       d.addEventListener('click',function(){ placeBoss(b); });
       g.appendChild(d);
     });
