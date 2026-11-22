@@ -1109,11 +1109,18 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var WH_IDEA='https://discord.com/api/webhooks/1574002746535845972/DGTXxn4pniGocC9-haZhYrXUlZu3zE80eT3juN8YA608N8fkN4eVA-Zb5UGdDcpl8A5z';
     var WH_BUG='https://discord.com/api/webhooks/1574012074130936028/I5Bypt65ByuQsuetYBzshBb2qLYemVMzIhdAFx0I54UXfr3yEphuWFGjC5oeMYwquxVY';
     var WH_SPAM='https://discord.com/api/webhooks/1574012215256813588/HFwIx-2BP_qrRLO_YvbxatGWTKrx11bpm6MeWzSNinuC97U5839iloBlx7MB8nPkPnOW';
-    // фильтр спама и оскорблений
-    var BADWORDS=['пидор','лох','гандон','хуй','хуя','пизд','ебан','хуе','ебат','ебл','даун','долбоеб','мудак','сволоч','тварь','уебок','гнид','срать','сучк','бляд','шалав','проститутк','идиот','дебил','кретин','fuck','shit','nigg','bitch','asshole','dick','retard','fag','cunt','whore'];
-    var low=(' '+text+' ').toLowerCase();
+    // фильтр спама и оскорблений (максимальный)
+    function norm(s){
+      s=(' '+s+' ').toLowerCase();
+      var map={'0':'о','1':'и','3':'е','4':'а','6':'б','7':'т','8':'ь','9':'г','@':'а','$':'s'};
+      s=s.split('').map(function(c){ return map[c]||c; }).join('');
+      return s.replace(/[^a-zа-яё0-9]/g,'');
+    }
+    function hits(word,src){ return src.indexOf(norm(word))>-1; }
+    var BADWORDS=['пидар','пидор','пидр','пидер','педар','педер','пёдор','педр','педор','педрас','педарас','педик','письк','писюн','писюл','пися','писю','писька','попк','анус','попа','жопа','лох','лошар','лузер','гандон','гондон','хуй','хуя','хуе','хуи','хуё','хуль','хуйня','хуета','хер','хрен','ебат','ебан','ебл','ебу','ёб','ебал','ебло','уёб','уёбищ','пизд','пиздо','пезд','даун','дауна','долбоеб','долбаеб','мудак','мудозвон','сволоч','тварь','тварина','уебок','уёбок','гнид','срать','срач','сран','сучк','суки','сук','бляд','блят','шалав','шлюх','проститутк','простит','идиот','дебил','кретин','имбецил','одалб','ублюд','отмороз','придурок','дегенерат','чмо','мраз','гавно','говно','какаш','залуп','член','манда','вагина','сосат','отсос','минет','хуесос','fuck','fucking','fucker','shit','shite','bullshit','nigg','niger','nigga','bitch','bich','btch','asshole','ass','dick','retard','fag','faggot','cunt','whore','slut','pussy','cock','penis','bastard','moron','idiot','stupid','dumb','scum','douche','jerk','pedor','pedar','pedik','pizda','pisya','pissa','pisun','pisyu','piska','pimp','blowjob','dickhead'];
+    var low=norm(text);
     var badHit=false;
-    for(var bi=0; bi<BADWORDS.length; bi++){ if(low.indexOf(BADWORDS[bi])>-1){ badHit=true; break; } }
+    for(var bi=0; bi<BADWORDS.length; bi++){ if(low.indexOf(norm(BADWORDS[bi]))>-1){ badHit=true; break; } }
     // смысловая классификация: это предложение, баг или мусор?
     var IDEA_WORDS=['предлага','хочу','добавь','добавить','добавьте','было бы','тёмн','тему','темы','функци','функц','хорошо бы','могли бы','хотел','хотелось','сделайте','сделай','улучш','интерфейс','страниц','дизайн','цвет','кнопк','плаш','иконк','назван'];
     var BUG_WORDS=['баг','не работает','не открывается','ошибка','не грузит','сломан','не показывает','падает','крашит','не видно','не появляется','не загружается','сбой','проблем','глюк','не запускается','исчез','пропал','не сохраняет','не отправляется'];
