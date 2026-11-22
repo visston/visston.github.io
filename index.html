@@ -694,18 +694,21 @@
           <div style="margin-top:4px;font-size:12px;color:#c9c2c0">Визитов: <b id="profStatVisits">0</b> · Фидбеков: <b id="profStatFb">0</b> · Плиток: <b id="profStatTiles">0</b></div>
         </div>
         <div class="prof-ach" id="profAch"></div>
-        <div class="prof-field">
-          <label for="profNickInput">👤 Ник</label>
-          <input id="profNickInput" type="text" placeholder="Твой ник" maxlength="30" autocomplete="off">
+        <div id="profRegister" class="prof-register">
+          <div class="prof-field">
+            <label for="profNickInput">👤 Ник</label>
+            <input id="profNickInput" type="text" placeholder="Твой ник" maxlength="30" autocomplete="off">
+          </div>
+          <div class="prof-field">
+            <label for="profPassInput">🔒 Пароль</label>
+            <input id="profPassInput" type="password" placeholder="Придумай пароль" autocomplete="new-password">
+          </div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:10px;">Аккаунт создаётся <b>один раз и навсегда</b>: после сохранения ник и пароль изменить нельзя.</div>
+          <div class="prof-actions">
+            <button type="button" class="btn save" id="profSave">Создать аккаунт</button>
+          </div>
         </div>
-        <div class="prof-field">
-          <label for="profPassInput">🔒 Пароль</label>
-          <input id="profPassInput" type="password" placeholder="Придумай пароль" autocomplete="new-password">
-        </div>
-        <div style="font-size:11px;color:var(--dim);margin-bottom:10px;">Аккаунт создаётся <b>один раз и навсегда</b>: после сохранения ник и пароль изменить нельзя.</div>
-        <div class="prof-actions">
-          <button type="button" class="btn save" id="profSave">Сохранить</button>
-        </div>
+        <div id="profDone" class="prof-done" style="display:none;font-size:13px;color:var(--dim);margin-bottom:12px;">✅ Аккаунт создан раз и навсегда.</div>
         <div class="prof-actions">
           <button type="button" class="btn" id="profExport">⬇️ Экспорт данных</button>
           <button type="button" class="btn" id="profImport">⬆️ Импорт</button>
@@ -1579,8 +1582,13 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var nick=(function(){ try{ return localStorage.getItem('cain_nick')||''; }catch(e){ return ''; } })();
     document.getElementById('profNickShown').textContent=nick||'не задан';
     document.getElementById('profDateShown').textContent=profDate||'—';
-    document.getElementById('profNickInput').value=nick;
-    document.getElementById('profPassInput').value='';
+    var acc=getAccount&&getAccount();
+    var regBox=document.getElementById('profRegister');
+    var doneBox=document.getElementById('profDone');
+    if(regBox) regBox.style.display = acc ? 'none' : 'block';
+    if(doneBox) doneBox.style.display = acc ? 'block' : 'none';
+    if(document.getElementById('profNickInput')) document.getElementById('profNickInput').value=nick;
+    if(document.getElementById('profPassInput')) document.getElementById('profPassInput').value='';
     // уровень, ачивки, статистика
     var visits=(function(){ try{ return parseInt(localStorage.getItem('cain_visits')||'0',10); }catch(e){ return 0; } })();
     var fbs=(function(){ try{ return JSON.parse(localStorage.getItem('cain_feedback')||'[]'); }catch(e){ return []; } })();
@@ -2174,7 +2182,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var cells=50;
     for(var s=0;s<cells;s++){ lavaSeeds.push(Math.random()*200); }
     // длинные непрерывные трещины: каждая начинается на границе экрана и идёт одним путём до другой границы
-    var main=14;
+    var main=7;
     for(var i=0;i<main;i++){
       var edge=Math.floor(Math.random()*4);
       var x0,y0;
@@ -2203,7 +2211,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       lavaCracks.push({path:path, g:0.4+Math.random()*0.6, s:Math.random()*6.28, width:2+Math.random()*2.4});
     }
     // дополнительные короткие ответвления-«капилляры», тоже непрерывные линии
-    var extra=26;
+    var extra=14;
     for(var e2=0;e2<extra;e2++){
       var ex0=Math.random()*cw, ey0=Math.random()*ch;
       var ea=Math.random()*6.28;
