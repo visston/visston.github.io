@@ -830,9 +830,9 @@
           <div class="v">Версия 2.1 — айзек-сцены ⭐</div>
           <div class="d">Зрелищные живые сцены в духе The Binding of Isaac</div>
           <ul>
-            <li>Живой персонаж Isaac: плачет, фонтаны слёз, лужи и брызги, мухи комнаты.</li>
-            <li>«Сера-залп» — Isaac заряжает и бьёт гигантским пульсирующим лучом с искрами.</li>
-            <li>«Лазеры» — перекрестие Technology-лучей, вращается, со светящимися частицами.</li>
+            <li>«Слёзы Isaac» — красивый вихрь слёз: светящееся ядро, кружащиеся капли, спирали и брызги на полу.</li>
+            <li>«Сера-залп» — светящийся шар-источник заряжается и бьёт гигантским пульсирующим лучом с искрами.</li>
+            <li>«Лазеры» — перекрестие Technology-лучей из светящегося ядра, вращается, со светящимися частицами.</li>
             <li>«Мамин нож» — нож Mom пролетает через экран с кровавым следом.</li>
             <li>«Мамина нога» — нога Mom со тенью и грохотом вдавливается вниз.</li>
             <li>«Ангельская» — тёплый свет, столпы света, крылатый ангел и золотые частицы.</li>
@@ -2707,33 +2707,6 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
   }
 }
-function drawIsaacChar(x,y,s,sc){
-  // живой персонаж Isaac (голый ребёнок, плачет). s — масштаб, sc — фаза
-  cx.save(); cx.translate(x,y); cx.scale(s,s);
-  // ноги
-  cx.strokeStyle='#e8c8a8'; cx.lineWidth=3.4; cx.lineCap='round';
-  cx.beginPath(); cx.moveTo(-6,14); cx.lineTo(-8,22+Math.sin(sc*5)*1.5); cx.moveTo(6,14); cx.lineTo(8,22-Math.sin(sc*5)*1.5); cx.stroke();
-  // тело
-  cx.fillStyle='#f5dcc0'; cx.beginPath(); cx.ellipse(0,6,11,13,0,0,6.2832); cx.fill();
-  cx.strokeStyle='rgba(0,0,0,0.18)'; cx.lineWidth=1.2; cx.stroke();
-  // голова
-  cx.fillStyle='#f5dcc0'; cx.beginPath(); cx.arc(0,-8,9.5,0,6.2832); cx.fill();
-  // волосы (светлая прядь)
-  cx.fillStyle='#e6cba6'; cx.beginPath(); cx.arc(0,-11,8,3.14,6.2832); cx.fill();
-  // глаза — большие, плачет
-  cx.fillStyle='#fff'; cx.beginPath(); cx.ellipse(-4,-9,2.6,3,0,0,6.2832); cx.fill();
-  cx.fillStyle='#fff'; cx.beginPath(); cx.ellipse(4,-9,2.6,3,0,0,6.2832); cx.fill();
-  cx.fillStyle='#2a3444'; cx.beginPath(); cx.arc(-3.6,-9,1.3,0,6.2832); cx.fill();
-  cx.fillStyle='#2a3444'; cx.beginPath(); cx.arc(4.4,-9,1.3,0,6.2832); cx.fill();
-  // слёзы на щеках
-  cx.strokeStyle='rgba(120,190,255,0.85)'; cx.lineWidth=1.2;
-  var ty=2+Math.abs(Math.sin(sc*3))*2;
-  cx.beginPath(); cx.arc(-6,-6,1+Math.sin(sc*6)*0.4,0,6.2832); cx.fillStyle='rgba(120,190,255,0.7)'; cx.fill();
-  cx.beginPath(); cx.moveTo(-6,-5); cx.lineTo(-5,ty); cx.moveTo(6,-5); cx.lineTo(5,ty); cx.stroke();
-  // рот (открыт, плачет)
-  cx.fillStyle='#7a3a3a'; cx.beginPath(); cx.ellipse(0,-4,2.4,2.8,0,0,6.2832); cx.fill();
-  cx.restore();
-}
 function drawIsaacScene(type){
   var b=animColor(curAnim);
   sceneT+=0.03;
@@ -2763,49 +2736,61 @@ function drawIsaacScene(type){
 
   if(type==='isc_isaac'){
     roomFloor();
-    // Isaac по центру, плачет фонтанами слёз
-    var ix=cw*0.5, iy=floorY-36;
-    drawIsaacChar(ix,iy,1.15,sceneT);
-    // фонтаны слёз в обе стороны
-    var burst=Math.floor((sceneT*4))%2;
+    // красивый вихрь слёз по центру (без персонажа): плотный пульсирующий шар + спираль капель
+    var ix=cw*0.5, iy=floorY-60;
+    // светящееся ядро-источник слёз
+    var coreR=26+Math.sin(sceneT*4)*4;
+    var core=cx.createRadialGradient(ix,iy,2,ix,iy,coreR*2.6);
+    core.addColorStop(0,'rgba(170,215,255,'+(0.5+0.15*Math.sin(sceneT*5)).toFixed(3)+')');
+    core.addColorStop(0.45,'rgba(120,180,255,0.28)');
+    core.addColorStop(1,'rgba(90,150,230,0)');
+    cx.fillStyle=core; cx.beginPath(); cx.arc(ix,iy,coreR*2.6,0,6.2832); cx.fill();
+    // плотный шар из слёз (много капель, кружатся)
+    var drops=26;
+    for(var d3=0;d3<drops;d3++){
+      var a3=d3/drops*6.2832+sceneT*1.5;
+      var rad=coreR*(0.4+0.6*Math.abs(Math.sin(d3*2.1+sceneT*1.2)));
+      var px=ix+Math.cos(a3)*rad, py=iy+Math.sin(a3)*rad*0.7;
+      var pr=3+Math.abs(Math.sin(sceneT*6+d3))*2;
+      cx.beginPath(); cx.arc(px,py,pr,0,6.2832); cx.fillStyle='rgba(140,200,255,'+(0.75+0.2*Math.sin(sceneT*7+d3)).toFixed(3)+')'; cx.fill();
+      cx.beginPath(); cx.arc(px-pr*0.3,py-pr*0.3,pr*0.32,0,6.2832); cx.fillStyle='rgba(255,255,255,0.7)'; cx.fill();
+    }
+    // спиральный поток больших слёз, разлетающихся в стороны и вверх
     for(var s2=0;s2<2;s2++){
       var dir=s2===0?-1:1;
-      var ox=ix+dir*10, oy=iy-8;
-      // веер слёз
-      for(var t2=0;t2<7;t2++){
-        var ph=((t2/7)*Math.PI-0.4)*dir+Math.sin(sceneT*6+t2+burst)*0.08;
-        var d=((sceneT*140+t2*40)%330)-20;
-        var tx=ox+Math.sin(ph)*d*dir*0.8;
-        var ty2=oy-Math.cos(ph)*d*0.25-((sceneT*60+t2)%40);
-        if(ty2<0) continue;
+      for(var t2=0;t2<9;t2++){
+        var ph=((t2/9)*Math.PI-0.35)*dir+Math.sin(sceneT*6+t2)*0.1;
+        var d=((sceneT*130+t2*38)%340)-10;
+        var spx=ix+Math.sin(ph)*d*dir*0.85;
+        var spy=iy-Math.cos(ph)*d*0.3-((sceneT*55+t2)%45);
+        if(spy<0) continue;
         var rr=2.5+Math.sin(sceneT*5+t2)*0.8;
-        // слеза с бликом
-        cx.beginPath(); cx.arc(tx,ty2,rr,0,6.2832); cx.fillStyle='rgba(130,195,255,'+(0.8-0.3*Math.sin(sceneT*4+t2)).toFixed(3)+')'; cx.fill();
-        cx.beginPath(); cx.arc(tx-rr*0.3,ty2-rr*0.3,rr*0.3,0,6.2832); cx.fillStyle='rgba(255,255,255,0.7)'; cx.fill();
+        cx.beginPath(); cx.arc(spx,spy,rr,0,6.2832); cx.fillStyle='rgba(130,195,255,'+(0.85-0.3*Math.sin(sceneT*4+t2)).toFixed(3)+')'; cx.fill();
+        cx.beginPath(); cx.arc(spx-rr*0.3,spy-rr*0.3,rr*0.3,0,6.2832); cx.fillStyle='rgba(255,255,255,0.7)'; cx.fill();
       }
     }
-    // лужи слёз на полу с брызгами
-    cx.fillStyle='rgba(110,180,250,0.18)';
-    cx.beginPath(); cx.ellipse(ix-70,floorY-6,44,7,0,0,6.2832); cx.fill();
-    cx.beginPath(); cx.ellipse(ix+70,floorY-6,44,7,0,0,6.2832); cx.fill();
-    // летающие вокруг мухи (декор комнаты)
-    for(var fl=0;fl<5;fl++){
-      var fx=(ix-170+((sceneT*40+fl*97)%340)), fy=ch*0.2+Math.sin(sceneT*5+fl)*40+((sceneT*30+fl*53)%100);
-      if(fx<0||fx>cw) continue;
-      cx.fillStyle='rgba(120,60,60,0.8)';
-      cx.beginPath(); cx.arc(fx,fy,4+Math.abs(Math.sin(sceneT*8+fl))*1.5,0,6.2832); cx.fill();
-      cx.fillStyle='rgba(140,200,230,0.4)';
-      cx.beginPath(); cx.ellipse(fx-5,fy-3,4,2,sceneT*3+fl,0,6.2832); cx.fill();
-    }
+    // лужи слёз на полу
+    cx.fillStyle='rgba(110,180,250,0.20)';
+    cx.beginPath(); cx.ellipse(ix-60,floorY-6,50,8,0,0,6.2832); cx.fill();
+    cx.beginPath(); cx.ellipse(ix+60,floorY-6,50,8,0,0,6.2832); cx.fill();
+    // брызги слёз взлетают из луж
+    for(var sp2=0;sp2<12;sp2++){ var spx2=ix-60+((sceneT*30+sp2*19)%120); var spy2=floorY-10-((sceneT*70+sp2*23)%36); cx.fillStyle='rgba(140,200,255,0.6)'; cx.beginPath(); cx.arc(spx2,spy2,1.6+Math.abs(Math.sin(sceneT*9+sp2)),0,6.2832); cx.fill(); }
     return;
   }
 
   if(type==='isc_brim'){
     roomFloor();
-    // Isaac слева, заряжает и бьёт гигантским лучом сера
-    var bx=80, by=ch*0.55;
+    // Сера-залп: светящийся шар-источник сбоку, бьёт гигантским лучом вправо (без персонажа)
+    var bx=90, by=ch*0.55;
     var charge=(Math.sin(sceneT*2.2)+1)/2; // 0..1 фаза зарядки
-    drawIsaacChar(bx,by,1.05,sceneT);
+    // сияющее ядро-источник на месте запуска
+    var src=cx.createRadialGradient(bx,by-6,2,bx,by-6,70+charge*40);
+    src.addColorStop(0,'rgba(255,120,80,'+(0.5+0.3*charge).toFixed(3)+')');
+    src.addColorStop(0.4,'rgba(220,40,50,0.35)');
+    src.addColorStop(1,'rgba(180,20,30,0)');
+    cx.fillStyle=src; cx.beginPath(); cx.arc(bx,by-6,70+charge*40,0,6.2832); cx.fill();
+    // жаркие вспышки вокруг ядра во время зарядки
+    if(charge>0.5){ for(var cb=0;cb<6;cb++){ var ca=cb/6*6.2832+sceneT*3; var crad=45+charge*50+((sceneT*40)%20); cx.fillStyle='rgba(255,'+(90+cb*20)+',40,'+(0.35*charge+0.15*Math.sin(sceneT*9+cb)).toFixed(3)+')'; cx.beginPath(); cx.arc(bx+Math.cos(ca)*crad,by-6+Math.sin(ca)*crad*0.6,3+Math.abs(Math.sin(sceneT*8+cb))*3,0,6.2832); cx.fill(); } }
     if(charge>0.35){
       // луч сера (толстый, с пульсацией), летит вправо изо рта
       var grow=0.7+0.3*Math.sin(sceneT*6);
@@ -2830,10 +2815,17 @@ function drawIsaacScene(type){
 
   if(type==='isc_laser'){
     roomFloor();
-    // перекрестие лазеров Technology, бьющее из центра
+    // перекрестие лазеров Technology из светящегося ядра по центру (без персонажа)
     var lx=cw*0.5, ly=ch*0.4;
-    drawIsaacChar(lx,ly,1.1,sceneT);
     var angle=sceneT*0.8;
+    // ядро-источник лазеров
+    var lcs=cx.createRadialGradient(lx,ly,2,lx,ly,90);
+    lcs.addColorStop(0,'rgba(200,230,255,0.95)');
+    lcs.addColorStop(0.35,'rgba(120,180,255,0.4)');
+    lcs.addColorStop(1,'rgba(80,140,255,0)');
+    cx.fillStyle=lcs; cx.beginPath(); cx.arc(lx,ly,90,0,6.2832); cx.fill();
+    // вращающиеся искры вокруг ядра
+    for(var spc=0;spc<8;spc++){ var sca=spc/8*6.2832+sceneT*2; var scr=34+Math.sin(sceneT*6+spc)*8; cx.fillStyle='rgba(220,240,255,'+(0.7+0.3*Math.sin(sceneT*9+spc)).toFixed(3)+')'; cx.beginPath(); cx.arc(lx+Math.cos(sca)*scr,ly+Math.sin(sca)*scr,3,0,6.2832); cx.fill(); }
     for(var beam=0;beam<4;beam++){
       var a=angle+beam*Math.PI/2;
       var dx=Math.cos(a),dy=Math.sin(a);
