@@ -461,7 +461,7 @@
       <div class="cards">
         <div class="card"><h3 id="cardCain">⚔ Cain</h3><p id="cardCainP">Сайт в духе The Binding of Isaac: тёмно-золотая тема, персонажи и атмосфера любимой игры.</p></div>
         <div class="card"><h3 id="cardThemes">🎨 Темы и анимации</h3><p id="cardThemesP">45 тем персонажей и десятки живых фоновых анимаций — звёзды, снег, огонь, магма и другие.</p></div>
-        <div class="card"><h3 id="cardComfort">🤖 ИИ и удобство</h3><p id="cardComfortP">Встроенный ИИ-чат с генерацией картинок, свои плитки, заметки, поиск по фото и общий список пользователей.</p></div>
+        <div class="card"><h3 id="cardComfort">🤖 ИИ и удобство</h3><p id="cardComfortP">Встроенный ИИ-чат, свои плитки, заметки, поиск по фото и общий список пользователей.</p></div>
       </div>
     </section>
   </div>
@@ -663,7 +663,7 @@
         </ul>
         <h4>🤖 ИИ-чат</h4>
         <ul>
-          <li>Кружок <b>🤖</b> внизу — живой чат с ИИ. Выбери модель (OpenAI, Mistral, Llama). Кнопка <b>🖼</b> — нарисовать картинку по описанию.</li>
+          <li>Кружок <b>🤖</b> внизу — живой чат с ИИ. Выбери модель (OpenAI, Mistral, Llama).</li>
           <li>Ник вводится один раз — он попадает в общий список зарегистрированных пользователей.</li>
         </ul>
         <h4>⚙️ Настройки вида</h4>
@@ -758,7 +758,6 @@
           <div class="v">Версия 1.3 — ИИ</div>
           <ul>
             <li>Встроенный ИИ-чат VISSTON AI.</li>
-            <li>Генерация картинок по описанию (кнопка 🖼).</li>
             <li>ИИ отвечает на языке пользователя.</li>
           </ul>
         </div>
@@ -822,7 +821,6 @@
             <li>Рыбки крупнее и заметнее, исчезают при клике.</li>
             <li>Анимация и звук при открытии плитки (вспышка, вращение, прыжок и другие) для всех плиток, включая базовые.</li>
             <li>Исправлен баг редактирования плитки — больше не открывается соседняя.</li>
-            <li>Генерация картинок стала точнее: улучшен перевод запроса, слова больше не теряются.</li>
             <li>Выбор модели ИИ: OpenAI, OpenAI Large, Mistral, Llama.</li>
             <li>Список зарегистрированных пользователей теперь общий — один раз ввёл ник, и он виден всем.</li>
             <li>Исправлен показ пользователей в панели создателя.</li>
@@ -958,10 +956,9 @@
   <div class="chat-msgs" id="chatMsgs"></div>
   <div class="chat-in">
     <textarea id="chatInput" placeholder="Спроси что угодно..." rows="1"></textarea>
-    <button type="button" id="chatImg" title="Нарисовать картинку">🖼</button>
     <button type="button" id="chatSend">➤</button>
   </div>
-  <div class="chat-tip">Бесплатный ИИ · Enter — отправить · 🖼 — нарисовать картинку по описанию</div>
+  <div class="chat-tip">Бесплатный ИИ · Enter — отправить</div>
 </div>
 <script>
   /* ===== Локализация ===== */
@@ -1517,13 +1514,20 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   var USERBIN_ID='dfbdebc';
   var USERBIN_URL='https://extendsclass.com/api/json-storage/bin/'+USERBIN_ID;
   function loadSharedUsers(cb){
-    try{
-      // антикэш: случайный параметр, чтобы Cloudflare не отдавал устаревший список
-      fetch(USERBIN_URL+'?_t='+Date.now()+Math.floor(Math.random()*999)).then(function(r){return r.text();}).then(function(t){
-        var arr=parseSharedText(t);
-        cb(Array.isArray(arr)?arr:[]);
-      }).catch(function(){ cb(null); });
-    }catch(e){ cb(null); }
+    // несколько попыток чтения: Cloudflare может отдать устаревший (пустой) кэш, повторяем
+    var tries=0;
+    var attemptLoad=function(){
+      try{
+        fetch(USERBIN_URL+'?_t='+Date.now()+Math.floor(Math.random()*999)).then(function(r){return r.text();}).then(function(t){
+          var arr=parseSharedText(t);
+          var ok=Array.isArray(arr)&&arr.length>0;
+          // если пусто и ещё есть попытки — пробуем ещё раз (возможно кэш)
+          if(!ok && tries<2){ tries++; setTimeout(attemptLoad, 500+Math.random()*600); return; }
+          cb(Array.isArray(arr)?arr:[]);
+        }).catch(function(){ if(tries<2){ tries++; setTimeout(attemptLoad,700); return; } cb(null); });
+      }catch(e){ if(tries<2){ tries++; setTimeout(attemptLoad,700); return; } cb(null); }
+    };
+    attemptLoad();
   }
   function parseSharedText(t){
     var m=t.match(/^(\[[\s\S]*?\])\s*</);
@@ -2034,56 +2038,6 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   }
   chatSend.addEventListener('click',ask);
   chatInput.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); ask(); } });
-  // генерация картинки (с авто-повторами при лимите/сбое)
-  var chatImgBtn=document.getElementById('chatImg');
-  function genImage(){
-    var text=chatInput.value.trim(); if(!text||busy) return; chatInput.value='';
-    addMsg('user','🖼 '+text); setBusy(true);
-    drawTry(text,1);
-  }
-  function drawTry(text,attempt,note){
-    var wait=addMsg('ai', note||'Рисую…'); setBusy(true);
-    // стабильный seed из текста, чтобы одно описание -> похожая картинка
-    var seed=0; var s=text||''; for(var si=0;si<s.length;si++){ seed=(seed*31+s.charCodeAt(si))>>>0; } seed=seed%1000000;
-    // переводим промпт на английский (pollinations генерит лучше) и усиляем стилем
-    var userText=(text||'').length>300? text.slice(0,300) : (text||'').trim();
-    var styleHints='. detailed digital art, vibrant colors, sharp focus, cinematic composition';
-    // по возможности переводим пользовательский текст в англ-промпт на лету (простая замена частых слов)
-    var ruEn={'кот':'cat','кошк':'cat','собака':'dog','пёс':'dog','щен':'puppy','машина':'car','автомобил':'car','дом':'house','город':'city','космос':'space','гора':'mountain','лес':'forest','море':'sea','океан':'ocean','река':'river','солнце':'sun','луна':'moon','звезда':'star','дракон':'dragon','робот':'robot','ангел':'angel','демон':'demon','красн':'red','син':'blue','зелён':'green','жёлт':'yellow','бел':'white','чёрн':'black','розов':'pink','фиолет':'purple','оранж':'orange','тёмн':'dark','светл':'light','огн':'fire','языки':'fire','пламя':'flame','вода':'water','лёд':'ice','снег':'snow','цвет':'flower','цветок':'flower','дерев':'tree','девочка':'girl','мальчик':'boy','человек':'person','мужчина':'man','женщина':'woman','кошка':'cat','какаш':'pile of poop','говн':'pile of poop','фекал':'feces','каках':'poop','камень':'stone','скал':'rock','крыл':'wing','меч':'sword','кров':'blood','сердц':'heart','глаз':'eye','череп':'skull','скелет':'skeleton','кост':'bone','призрак':'ghost','дух':'ghost','коса':'scythe','магм':'magma','лава':'lava','вулкан':'volcano','кристалл':'crystal','алмаз':'diamond','золот':'gold','серебр':'silver','монет':'coin','портрет':'portrait','пейзаж':'landscape','закат':'sunset','рассвет':'sunrise','ночь':'night','день':'day','небо':'sky','облак':'cloud','дождь':'rain','молния':'lightning','гром':'thunder','радуг':'rainbow','птен':'chick','птиц':'bird','бабоч':'butterfly','пчел':'bee','паук':'spider','волк':'wolf','лис':'fox','медвед':'bear','тигр':'tiger','лев':'lion','слон':'elephant','лошад':'horse','корова':'cow','свинь':'pig','овца':'sheep','коз':'goat','заяц':'rabbit','кролик':'rabbit','змей':'snake','ящер':'lizard','черепах':'turtle','лягуш':'frog','рыб':'fish','акул':'shark','кит':'whale','осьминог':'octopus'};
-    var words=userText.split(/\s+/); var translated=[]; var hasCyr=/[а-яё]/i.test(userText);
-    for(var wi=0;wi<words.length;wi++){
-      var w=words[wi]; var low=w.toLowerCase(); var mapped=null;
-      for(var k in ruEn){ if(low.indexOf(k)>-1){ mapped=ruEn[k]; break; } }
-      if(mapped){ translated.push(mapped); }
-      else if(!/[а-яё]/i.test(w)){ translated.push(w); }
-      else { translated.push(w); } // нераспознанное русское слово оставляем как есть, чтобы промпт не пустовал
-    }
-    var promptText= hasCyr ? translated.join(' ') : userText;
-    promptText += styleHints;
-    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(promptText)+'?width=832&height=624&seed='+seed+'&model=flux&nologo=true&noip=true&safe=true';
-    var img=document.createElement('img');
-    img.style.maxWidth='100%'; img.style.borderRadius='10px'; img.style.marginTop='4px';
-    img.alt='сгенерированная картинка';
-    var done=false;
-    function fail(){
-      if(done) return; done=true;
-      if(attempt<4){
-        // длинная пауза: pollinations лимитирует частые запросы — ждём существенно
-        var pause = 15000+attempt*10000;
-        wait.textContent='Сервис занят, подожди '+(pause/1000)+'с и попробую снова (попытка '+attempt+')…';
-        setTimeout(function(){ wait.remove(); drawTry(text,attempt+1,'Перерисовываю…'); }, pause);
-      } else {
-        wait.className='msg err';
-        wait.textContent='Генератор сейчас перегружен (бесплатный лимит сервиса). Подожди 1–2 мин и попробуй снова.';
-        setBusy(false);
-      }
-    }
-    img.onload=function(){ if(done) return; done=true; wait.textContent=''; wait.appendChild(img); setBusy(false); chatInput.focus(); };
-    img.onerror=function(){ fail(); };
-    setTimeout(function(){ if(!done){ fail(); } }, 55000);
-    img.src=url;
-  }
-  if(chatImgBtn) chatImgBtn.addEventListener('click',genImage);
   // не прячем окно при клике внутри
   chatbox.addEventListener('click',function(e){ e.stopPropagation(); });
 
