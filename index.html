@@ -826,6 +826,20 @@
             <li>Исправлен показ пользователей в панели создателя.</li>
           </ul>
         </div>
+        <div class="cl-version">
+          <div class="v">Версия 2.1 — айзек-сцены ⭐</div>
+          <div class="d">Зрелищные живые сцены в духе The Binding of Isaac</div>
+          <ul>
+            <li>Живой персонаж Isaac: плачет, фонтаны слёз, лужи и брызги, мухи комнаты.</li>
+            <li>«Сера-залп» — Isaac заряжает и бьёт гигантским пульсирующим лучом с искрами.</li>
+            <li>«Лазеры» — перекрестие Technology-лучей, вращается, со светящимися частицами.</li>
+            <li>«Мамин нож» — нож Mom пролетает через экран с кровавым следом.</li>
+            <li>«Мамина нога» — нога Mom со тенью и грохотом вдавливается вниз.</li>
+            <li>«Ангельская» — тёплый свет, столпы света, крылатый ангел и золотые частицы.</li>
+            <li>«Комната ада» — каменный пол с трещинами, горящие факелы, летающий пепел.</li>
+            <li>Дощатый пол с перспективой и освещением во всех сценах.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -2091,6 +2105,13 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     {n:'Части Guppy', id:'ib_guppys', t:'части Guppy', c:'#b89a6a', type:'isaac_enemy', shape:'ib_guppy'},
     {n:'Крылья', id:'ib_wings', t:'ангельские крылья', c:'#d8d8e0', type:'isaac_rise', shape:'ib_wings'},
     {n:'Рога', id:'ib_horns', t:'демонические рога', c:'#c8c8d0', type:'isaac_drift', shape:'ib_horn'},
+    {n:'✦ Isaac плачет', id:'isc_isaac', t:'Живой Isaac в комнате, фонтаны слёз', c:'#8fd0ff', type:'isc_isaac', shape:'isaac_tear'},
+    {n:'✦ Сера-залп', id:'isc_brim', t:'Isaac заряжает и бьёт гигантским лучом', c:'#e02030', type:'isc_brim', shape:'brimstone'},
+    {n:'✦ Лазеры', id:'isc_laser', t:'перекрестие лазеров Technology', c:'#5af', type:'isc_laser', shape:'isaac_laser'},
+    {n:'✦ Мамин нож', id:'isc_knife', t:'нож Мом Дуга летит через экран', c:'#b8c8d8', type:'isc_knife', shape:'bone'},
+    {n:'✦ Мамина нога', id:'isc_foot', t:'нога Мом с грохотом вдавливает', c:'#c88a5a', type:'isc_foot', shape:'drop'},
+    {n:'✦ Ангельская', id:'isc_angel', t:'ангельская комната, свет и статуи', c:'#ffe8a0', type:'isc_angel', shape:'ray'},
+    {n:'✦ Комната ада', id:'isc_hell', t:'адская комната, огонь и пепел', c:'#ff5a2a', type:'isc_hell', shape:'flame'},
     {n:'Туман', id:'mist', t:'мягкие клубы дыма', c:'#9aa7b5', type:'drift', shape:'cloud'},
     {n:'Рыбки', id:'fish', t:'рыбки плавают, исчезают при клике', c:'#4ad0c8', type:'fish', shape:'fish'},
     {n:'Звёзды', id:'stars', t:'мерцающие звезды', c:'#ffffff', type:'rise', shape:'star'},
@@ -2146,6 +2167,7 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     var mode=id||'stars', n=Math.round(cw/15); parts=[];
     var spec=anims.filter(function(a){return a.id===mode;})[0]||anims[1];
     var type=spec.type||'rise';
+    if(type.indexOf('isc_')===0){ parts=[]; return; } // зрелищные сцены рисуются целиком в drawIsaacScene
     for(var i=0;i<n;i++){
       var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.3+Math.random()*0.6,tw:Math.random()*6.28,s:0.2+Math.random()*1.4,ang:Math.random()*6.28,ph:Math.random()*6.28};
       if(type==='snow'){ p.vy=0.3+Math.random()*0.9; p.vx=(Math.random()-0.5)*0.4; p.r=1+Math.random()*3; }
@@ -2685,11 +2707,257 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
   }
 }
+function drawIsaacChar(x,y,s,sc){
+  // живой персонаж Isaac (голый ребёнок, плачет). s — масштаб, sc — фаза
+  cx.save(); cx.translate(x,y); cx.scale(s,s);
+  // ноги
+  cx.strokeStyle='#e8c8a8'; cx.lineWidth=3.4; cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(-6,14); cx.lineTo(-8,22+Math.sin(sc*5)*1.5); cx.moveTo(6,14); cx.lineTo(8,22-Math.sin(sc*5)*1.5); cx.stroke();
+  // тело
+  cx.fillStyle='#f5dcc0'; cx.beginPath(); cx.ellipse(0,6,11,13,0,0,6.2832); cx.fill();
+  cx.strokeStyle='rgba(0,0,0,0.18)'; cx.lineWidth=1.2; cx.stroke();
+  // голова
+  cx.fillStyle='#f5dcc0'; cx.beginPath(); cx.arc(0,-8,9.5,0,6.2832); cx.fill();
+  // волосы (светлая прядь)
+  cx.fillStyle='#e6cba6'; cx.beginPath(); cx.arc(0,-11,8,3.14,6.2832); cx.fill();
+  // глаза — большие, плачет
+  cx.fillStyle='#fff'; cx.beginPath(); cx.ellipse(-4,-9,2.6,3,0,0,6.2832); cx.fill();
+  cx.fillStyle='#fff'; cx.beginPath(); cx.ellipse(4,-9,2.6,3,0,0,6.2832); cx.fill();
+  cx.fillStyle='#2a3444'; cx.beginPath(); cx.arc(-3.6,-9,1.3,0,6.2832); cx.fill();
+  cx.fillStyle='#2a3444'; cx.beginPath(); cx.arc(4.4,-9,1.3,0,6.2832); cx.fill();
+  // слёзы на щеках
+  cx.strokeStyle='rgba(120,190,255,0.85)'; cx.lineWidth=1.2;
+  var ty=2+Math.abs(Math.sin(sc*3))*2;
+  cx.beginPath(); cx.arc(-6,-6,1+Math.sin(sc*6)*0.4,0,6.2832); cx.fillStyle='rgba(120,190,255,0.7)'; cx.fill();
+  cx.beginPath(); cx.moveTo(-6,-5); cx.lineTo(-5,ty); cx.moveTo(6,-5); cx.lineTo(5,ty); cx.stroke();
+  // рот (открыт, плачет)
+  cx.fillStyle='#7a3a3a'; cx.beginPath(); cx.ellipse(0,-4,2.4,2.8,0,0,6.2832); cx.fill();
+  cx.restore();
+}
+function drawIsaacScene(type){
+  var b=animColor(curAnim);
+  sceneT+=0.03;
+  var floorY=ch*0.78;
+  // общий тёмный фон сцены-комнаты
+  cx.fillStyle='rgba(12,9,8,0.35)'; cx.fillRect(0,0,cw,ch);
+  // гравитация света сверху
+  var ambient=cx.createRadialGradient(cw/2,ch*0.25,40,cw/2,ch*0.25,Math.max(cw,ch)*0.8);
+  ambient.addColorStop(0,'rgba(255,240,210,'+(0.06+0.03*Math.sin(sceneT*1.3)).toFixed(3)+')');
+  ambient.addColorStop(1,'rgba(120,90,60,0)');
+  cx.fillStyle=ambient; cx.fillRect(0,0,cw,ch);
+
+  function roomFloor(){
+    // дощатый пол с перспективой к краям
+    for(var r=0;r<9;r++){
+      var yy=floorY+r*26;
+      var grad=cx.createLinearGradient(0,yy-26,0,yy);
+      grad.addColorStop(0,'rgba(92,62,34,'+(0.28-r*0.025).toFixed(3)+')');
+      grad.addColorStop(1,'rgba(60,40,22,'+(0.22-r*0.02).toFixed(3)+')');
+      cx.fillStyle=grad; cx.fillRect(0,yy,cw,26);
+      cx.strokeStyle='rgba(20,12,6,0.5)'; cx.lineWidth=1; cx.beginPath(); cx.moveTo(0,yy); cx.lineTo(cw,yy); cx.stroke();
+    }
+    // тёмная стена сверху
+    cx.fillStyle='rgba(140,112,72,0.14)'; cx.fillRect(0,0,cw,floorY);
+    cx.strokeStyle='rgba(200,170,120,0.25)'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(0,floorY); cx.lineTo(cw,floorY); cx.stroke();
+  }
+
+  if(type==='isc_isaac'){
+    roomFloor();
+    // Isaac по центру, плачет фонтанами слёз
+    var ix=cw*0.5, iy=floorY-36;
+    drawIsaacChar(ix,iy,1.15,sceneT);
+    // фонтаны слёз в обе стороны
+    var burst=Math.floor((sceneT*4))%2;
+    for(var s2=0;s2<2;s2++){
+      var dir=s2===0?-1:1;
+      var ox=ix+dir*10, oy=iy-8;
+      // веер слёз
+      for(var t2=0;t2<7;t2++){
+        var ph=((t2/7)*Math.PI-0.4)*dir+Math.sin(sceneT*6+t2+burst)*0.08;
+        var d=((sceneT*140+t2*40)%330)-20;
+        var tx=ox+Math.sin(ph)*d*dir*0.8;
+        var ty2=oy-Math.cos(ph)*d*0.25-((sceneT*60+t2)%40);
+        if(ty2<0) continue;
+        var rr=2.5+Math.sin(sceneT*5+t2)*0.8;
+        // слеза с бликом
+        cx.beginPath(); cx.arc(tx,ty2,rr,0,6.2832); cx.fillStyle='rgba(130,195,255,'+(0.8-0.3*Math.sin(sceneT*4+t2)).toFixed(3)+')'; cx.fill();
+        cx.beginPath(); cx.arc(tx-rr*0.3,ty2-rr*0.3,rr*0.3,0,6.2832); cx.fillStyle='rgba(255,255,255,0.7)'; cx.fill();
+      }
+    }
+    // лужи слёз на полу с брызгами
+    cx.fillStyle='rgba(110,180,250,0.18)';
+    cx.beginPath(); cx.ellipse(ix-70,floorY-6,44,7,0,0,6.2832); cx.fill();
+    cx.beginPath(); cx.ellipse(ix+70,floorY-6,44,7,0,0,6.2832); cx.fill();
+    // летающие вокруг мухи (декор комнаты)
+    for(var fl=0;fl<5;fl++){
+      var fx=(ix-170+((sceneT*40+fl*97)%340)), fy=ch*0.2+Math.sin(sceneT*5+fl)*40+((sceneT*30+fl*53)%100);
+      if(fx<0||fx>cw) continue;
+      cx.fillStyle='rgba(120,60,60,0.8)';
+      cx.beginPath(); cx.arc(fx,fy,4+Math.abs(Math.sin(sceneT*8+fl))*1.5,0,6.2832); cx.fill();
+      cx.fillStyle='rgba(140,200,230,0.4)';
+      cx.beginPath(); cx.ellipse(fx-5,fy-3,4,2,sceneT*3+fl,0,6.2832); cx.fill();
+    }
+    return;
+  }
+
+  if(type==='isc_brim'){
+    roomFloor();
+    // Isaac слева, заряжает и бьёт гигантским лучом сера
+    var bx=80, by=ch*0.55;
+    var charge=(Math.sin(sceneT*2.2)+1)/2; // 0..1 фаза зарядки
+    drawIsaacChar(bx,by,1.05,sceneT);
+    if(charge>0.35){
+      // луч сера (толстый, с пульсацией), летит вправо изо рта
+      var grow=0.7+0.3*Math.sin(sceneT*6);
+      for(var lay=0;lay<3;lay++){
+        var lw=(60-lay*14)*grow*(0.5+charge*0.5);
+        var alpha=[0.35,0.22,0.12][lay];
+        var lcol=lay===0?'#e02030':lay===1?'#ff5030':'#ff9070';
+        cx.strokeStyle=lcol; cx.globalAlpha=alpha; cx.lineWidth=lw; cx.lineCap='round';
+        cx.beginPath(); cx.moveTo(bx+14,by-6); cx.lineTo(cw*0.96,by-6+Math.sin(sceneT*9)*8); cx.stroke();
+      }
+      cx.globalAlpha=1;
+      // жёлто-белое ядро
+      cx.strokeStyle='#fff3b0'; cx.globalAlpha=0.9; cx.lineWidth=8*(0.5+charge*0.5);
+      cx.beginPath(); cx.moveTo(bx+14,by-6); cx.lineTo(cw*0.96,by-6+Math.sin(sceneT*9)*8); cx.stroke(); cx.globalAlpha=1;
+      // искры от луча
+      for(var sp=0;sp<10;sp++){ var spx=bx+40+((sceneT*500+sp*120)%(cw-bx-80)); cx.fillStyle='rgba(255,'+(120+sp*12)+',40,'+(0.5+0.4*Math.sin(sceneT*7+sp)).toFixed(3)+')'; cx.beginPath(); cx.arc(spx,by-6+Math.sin(sceneT*9+sp)*14,3+Math.abs(Math.sin(sceneT*12+sp))*4,0,6.2832); cx.fill(); }
+    }
+    // в укрытии на стене — капли серы (горящие)
+    for(var bd=0;bd<6;bd++){ var bdx=((sceneT*30+bd*80)%cw); var byy=ch*0.3+Math.sin(sceneT*3+bd)*14; cx.beginPath(); cx.arc(bdx,byy,4+Math.abs(Math.sin(sceneT*6+bd))*2,0,6.2832); cx.fillStyle='rgba(224,32,48,'+(0.5+0.4*Math.sin(sceneT*5+bd)).toFixed(3)+')'; cx.fill(); }
+    return;
+  }
+
+  if(type==='isc_laser'){
+    roomFloor();
+    // перекрестие лазеров Technology, бьющее из центра
+    var lx=cw*0.5, ly=ch*0.4;
+    drawIsaacChar(lx,ly,1.1,sceneT);
+    var angle=sceneT*0.8;
+    for(var beam=0;beam<4;beam++){
+      var a=angle+beam*Math.PI/2;
+      var dx=Math.cos(a),dy=Math.sin(a);
+      // луч
+      var gl=cx.createLinearGradient(lx+Math.cos(a)*20,ly+Math.sin(a)*20, lx+Math.cos(a)*(Math.max(cw,ch)),ly+Math.sin(a)*(Math.max(cw,ch)));
+      gl.addColorStop(0,'rgba(120,180,255,0.95)'); gl.addColorStop(1,'rgba(80,140,255,0.05)');
+      cx.strokeStyle=gl; cx.globalAlpha=0.9; cx.lineWidth=6; cx.lineCap='round';
+      cx.beginPath(); cx.moveTo(lx+dx*20,ly+dy*20); cx.lineTo(lx+dx*(Math.max(cw,ch)),ly+dy*(Math.max(cw,ch))); cx.stroke();
+      // внешнее свечение
+      cx.strokeStyle='rgba(150,200,255,0.25)'; cx.globalAlpha=0.4; cx.lineWidth=16;
+      cx.beginPath(); cx.moveTo(lx+dx*20,ly+dy*20); cx.lineTo(lx+dx*(Math.max(cw,ch)),ly+dy*(Math.max(cw,ch))); cx.stroke(); cx.globalAlpha=1;
+      // частицы вдоль луча
+      for(var pt=0;pt<8;pt++){ var pxx=lx+dx*(40+((sceneT*150+pt*90)%(Math.max(cw,ch)-60))); var pyy=ly+dy*(40+((sceneT*150+pt*90)%(Math.max(cw,ch)-60)))+Math.sin(sceneT*8+pt)*4; if(pxx<0||pxx>cw||pyy<0||pyy>ch) continue; cx.fillStyle='rgba(200,225,255,0.8)'; cx.beginPath(); cx.arc(pxx,pyy,3,0,6.2832); cx.fill(); }
+    }
+    return;
+  }
+
+  if(type==='isc_knife'){
+    roomFloor();
+    // нож МOM летит через экран (по дуге)
+    var kx=(sceneT*240)%(cw+300)-150;
+    var ky=ch*0.55-Math.sin(sceneT*3)*60;
+    var rot=sceneT*8;
+    cx.save(); cx.translate(kx,ky); cx.rotate(rot);
+    // лезвие
+    cx.fillStyle='#d8e4ee'; cx.beginPath(); cx.moveTo(60,0); cx.lineTo(-20,14); cx.lineTo(-20,-14); cx.closePath(); cx.fill();
+    cx.strokeStyle='#9db0c0'; cx.lineWidth=1.5; cx.stroke();
+    // рукоять
+    cx.fillStyle='#6a4a2a'; cx.fillRect(-44,-9,26,18); cx.strokeStyle='#3a2a15'; cx.stroke();
+    // кольцо
+    cx.strokeStyle='#c9b878'; cx.lineWidth=3; cx.beginPath(); cx.arc(-50,0,11,0,6.2832); cx.stroke();
+    // след кровавый
+    cx.globalAlpha=0.15; cx.strokeStyle='#b03040'; cx.lineWidth=14; cx.beginPath(); cx.moveTo(kx-Math.cos(rot)*90,ky); cx.lineTo(kx-260,ky-40+Math.sin(sceneT*3)*10); cx.stroke(); cx.globalAlpha=1;
+    cx.restore();
+    return;
+  }
+
+  if(type==='isc_foot'){
+    roomFloor();
+    // тень приближения Маминой ноги сверху
+    var footY=(Math.abs(Math.sin(sceneT*1.8))+0.15)*ch*0.8-20;
+    var footX=cw*0.5+Math.sin(sceneT*2)*30;
+    // тень на полу перед падением
+    var shadowY=floorY-4;
+    var shScale=0.5+0.5*Math.abs(Math.sin(sceneT*1.8));
+    cx.fillStyle='rgba(0,0,0,'+(0.25+0.2*shScale).toFixed(3)+')';
+    cx.beginPath(); cx.ellipse(footX,shadowY,90*shScale,24*shScale,0,0,6.2832); cx.fill();
+    // нога (ступня в ботинке)
+    var fy=footY-160*shScale;
+    cx.save(); cx.translate(footX,fy);
+    cx.globalAlpha=0.25+0.75*shScale;
+    cx.fillStyle='#c88a5a'; cx.beginPath(); cx.ellipse(0,0,30,18,0,0,6.2832); cx.fill();
+    cx.fillStyle='#3a2a1a'; cx.beginPath(); cx.ellipse(0,8,34,14,0,0,6.2832); cx.fill();
+    // щиколотка
+    cx.fillStyle='#d8a878'; cx.fillRect(-9,-40,18,24);
+    cx.globalAlpha=1; cx.restore();
+    return;
+  }
+
+  if(type==='isc_angel'){
+    // ангельская комната — тёплый свет, столбы света, статуи
+    cx.fillStyle='rgba(40,28,12,0.4)'; cx.fillRect(0,0,cw,ch);
+    // столпы света
+    for(var ay=0;ay<3;ay++){
+      var ax=ay*cw/2+cw/4;
+      var ag=cx.createLinearGradient(ax-40,0,ax+40,0);
+      ag.addColorStop(0,'rgba(255,235,160,0)');
+      ag.addColorStop(0.5,'rgba(255,240,180,'+(0.22+0.1*Math.sin(sceneT*2+ay)).toFixed(3)+')');
+      ag.addColorStop(1,'rgba(255,235,160,0)');
+      cx.fillStyle=ag; cx.fillRect(ax-40,0,80,ch);
+    }
+    // парящий светящийся шар-ангелский символ
+    var flyR=ch*0.3+Math.sin(sceneT*2)*12, flyY=ch*0.28+Math.sin(sceneT*1.5)*16;
+    var fg=cx.createRadialGradient(cw/2,flyY,2,cw/2,flyY,flyR);
+    fg.addColorStop(0,'rgba(255,250,220,0.9)');
+    fg.addColorStop(0.3,'rgba(255,225,150,0.35)');
+    fg.addColorStop(1,'rgba(255,200,100,0)');
+    cx.fillStyle=fg; cx.beginPath(); cx.arc(cw/2,flyY,flyR,0,6.2832); cx.fill();
+    // крылатый ангел (пара крыльев из света)
+    var ay2=cw/2, ay3=ch*0.5+Math.sin(sceneT*1.2)*10;
+    cx.fillStyle='#fff8e8';
+    for(var wing=-1;wing<=1;wing+=2){
+      cx.save(); cx.translate(ay2+wing*30,ay3); cx.rotate(wing*0.6+Math.sin(sceneT*3)*0.1);
+      cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(wing*50,-40,wing*90,-10); cx.quadraticCurveTo(wing*50,10,wing*20,8); cx.closePath(); cx.fill(); cx.restore();
+    }
+    cx.beginPath(); cx.arc(ay2,ay3,16,0,6.2832); cx.fillStyle='#fff8e8'; cx.fill();
+    // золотые частицы (святость)
+    for(var gp=0;gp<14;gp++){ var gx=((sceneT*20+gp*61)%cw); var gy=((sceneT*8+gp*37)%ch); cx.fillStyle='rgba(255,220,120,'+(0.6+0.4*Math.sin(sceneT*5+gp)).toFixed(3)+')'; cx.beginPath(); cx.arc(gx,gy,2+Math.sin(sceneT*4+gp),0,6.2832); cx.fill(); }
+    return;
+  }
+
+  if(type==='isc_hell'){
+    // адская комната — чёрные камни, огонь снизу, летает пепел
+    cx.fillStyle='rgba(30,10,8,0.5)'; cx.fillRect(0,0,cw,ch);
+    floorY=ch;
+    // каменный пол с трещинами
+    cx.fillStyle='rgba(70,40,30,0.3)'; cx.fillRect(0,ch*0.7,cw,ch*0.3);
+    cx.strokeStyle='rgba(0,0,0,0.5)'; cx.lineWidth=2;
+    for(var cr=0;cr<5;cr++){ var cy2=ch*0.7+cr*((ch*0.3)/4); cx.beginPath(); cx.moveTo(0,cy2); for(var cxx=0;cxx<=cw;cxx+=40){ cx.lineTo(cxx+((cr%2)?20:0),cy2+Math.sin(cr*9+cxx*0.01)*3); } cx.lineTo(cw,cy2); cx.stroke(); }
+    // пылающие огни на стенах
+    for(var fi=0;fi<4;fi++){
+      var fx2=fi*cw/4+cw/8;
+      var fh=60+Math.abs(Math.sin(sceneT*3+fi))*40;
+      var fw2=30+Math.abs(Math.sin(sceneT*2.5+fi))*12;
+      cx.beginPath(); cx.moveTo(fx2-fw2,ch*0.7); cx.quadraticCurveTo(fx2-fw2*0.4,ch*0.7-fh*0.6,fx2,ch*0.7-fh); cx.quadraticCurveTo(fx2+fw2*0.4,ch*0.7-fh*0.6,fx2+fw2,ch*0.7); cx.closePath();
+      cx.fillStyle='rgba(255,'+(80+fi*30)+',20,'+(0.7+0.2*Math.sin(sceneT*5+fi)).toFixed(3)+')'; cx.fill();
+      cx.beginPath(); cx.moveTo(fx2-fw2*0.4,ch*0.7); cx.quadraticCurveTo(fx2,ch*0.7-fh*0.4,fx2,ch*0.7-fh*0.6); cx.quadraticCurveTo(fx2+fw2*0.4,ch*0.7-fh*0.4,fx2+fw2*0.4,ch*0.7); cx.closePath();
+      cx.fillStyle='rgba(255,210,110,0.85)'; cx.fill();
+    }
+    // летающий пепел
+    for(var ash=0;ash<16;ash++){ var ax3=((sceneT*30+ash*83)%cw); var ay3=((sceneT*22+ash*51)%ch); cx.fillStyle='rgba(180,150,130,'+(0.3+0.3*Math.sin(sceneT*6+ash)).toFixed(3)+')'; cx.beginPath(); cx.arc(ax3,ay3,2+Math.sin(sceneT*7+ash)*1.5,0,6.2832); cx.fill(); }
+    // красное свечение внизу
+    var hg2=cx.createLinearGradient(0,ch*0.6,0,ch);
+    hg2.addColorStop(0,'rgba(180,40,10,0)'); hg2.addColorStop(1,'rgba(255,80,20,'+(0.25+0.1*Math.sin(sceneT*2)).toFixed(3)+')');
+    cx.fillStyle=hg2; cx.fillRect(0,ch*0.6,cw,ch*0.4);
+    return;
+  }
+}
 function draw(){
     cx.clearRect(0,0,cw,ch);
     var mode=curAnim, base=animColor(mode);
     var spec=anims.filter(function(a){return a.id===mode;})[0]||{}, type=spec.type||'rise';
     drawScene(type);
+    if(type.indexOf('isc_')===0){ drawIsaacScene(type); raf=requestAnimationFrame(draw); return; }
     for(var i=0;i<parts.length;i++){ var p=parts[i];
       if(type==='vortex'){ p.s+=0.012; p.ang+=0.012; p.x=cw/2+Math.cos(p.ang)*p.s*(Math.min(cw,ch)*0.5); p.y=ch/2+Math.sin(p.ang)*p.s*(Math.min(cw,ch)*0.5); }
       else if(type==='echo'){ p.s+=0.008; p.r=p.s*8; p.a-=0.003; if(p.a<=0){ p.x=Math.random()*cw; p.y=Math.random()*ch; p.s=0.4; p.a=0.5; } }
