@@ -2073,6 +2073,24 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   var accentRBG=hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--red-bright').trim()||'#e0485a');
   var ANIM_KEY='cain_anim';
   var anims=[
+    {n:'Слёзы Isaac', id:'ib_tears', t:'рой слёз', c:'#8fd0ff', type:'isaac_rise', shape:'isaac_tear'},
+    {n:'Сера', id:'ib_brim', t:'капли сера, залп', c:'#b01828', type:'isaac_rain', shape:'brimstone'},
+    {n:'Лазеры', id:'ib_laser', t:'луч Technology', c:'#ff3a3a', type:'isaac_laser', shape:'isaac_laser'},
+    {n:'Бомбы', id:'ib_bombs', t:'бомбы с искрой', c:'#6a6258', type:'isaac_fall', shape:'bomb'},
+    {n:'Ключи', id:'ib_keys', t:'золотые ключи', c:'#e0cf8a', type:'isaac_drift', shape:'key'},
+    {n:'Сердца', id:'ib_hearts', t:'красные сердца', c:'#c03040', type:'isaac_drift', shape:'isaac_heart'},
+    {n:'Монеты', id:'ib_coins', t:'золотые монеты', c:'#d8b64a', type:'isaac_drift', shape:'ib_coin'},
+    {n:'Душ.сердца', id:'ib_souls', t:'голубые сердца', c:'#5aaee6', type:'isaac_rise', shape:'ib_soul'},
+    {n:'Чёрные сердца', id:'ib_blackhearts', t:'чёрные сердца', c:'#4a4a55', type:'isaac_rise', shape:'ib_blackheart'},
+    {n:'Карты таро', id:'ib_tarot', t:'карты таро в рое', c:'#d8c9a0', type:'isaac_fall', shape:'tarot'},
+    {n:'Мухи', id:'ib_flys', t:'рой мух', c:'#703a3a', type:'isaac_enemy', shape:'ib_fly'},
+    {n:'Гейперы', id:'ib_gapers', t:'полчища гейперов', c:'#c86a5a', type:'isaac_enemy', shape:'ib_gaper'},
+    {n:'Пауки', id:'ib_spiders', t:'бегающие пауки', c:'#5a2a2a', type:'isaac_enemy', shape:'ib_spider'},
+    {n:'Комната', id:'ib_room', t:'пол подвала и колючки', c:'#6a4a2a', type:'isaac_room', shape:'ib_coin'},
+    {n:'Сундуки', id:'ib_chests', t:'сумдуки с золотом', c:'#9a6a3c', type:'isaac_drift', shape:'ib_chest'},
+    {n:'Части Guppy', id:'ib_guppys', t:'части Guppy', c:'#b89a6a', type:'isaac_enemy', shape:'ib_guppy'},
+    {n:'Крылья', id:'ib_wings', t:'ангельские крылья', c:'#d8d8e0', type:'isaac_rise', shape:'ib_wings'},
+    {n:'Рога', id:'ib_horns', t:'демонические рога', c:'#c8c8d0', type:'isaac_drift', shape:'ib_horn'},
     {n:'Туман', id:'mist', t:'мягкие клубы дыма', c:'#9aa7b5', type:'drift', shape:'cloud'},
     {n:'Рыбки', id:'fish', t:'рыбки плавают, исчезают при клике', c:'#4ad0c8', type:'fish', shape:'fish'},
     {n:'Звёзды', id:'stars', t:'мерцающие звезды', c:'#ffffff', type:'rise', shape:'star'},
@@ -2131,6 +2149,15 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     for(var i=0;i<n;i++){
       var p={x:Math.random()*cw,y:Math.random()*ch,r:1+Math.random()*2.4,vy:0,vx:0,a:0.3+Math.random()*0.6,tw:Math.random()*6.28,s:0.2+Math.random()*1.4,ang:Math.random()*6.28,ph:Math.random()*6.28};
       if(type==='snow'){ p.vy=0.3+Math.random()*0.9; p.vx=(Math.random()-0.5)*0.4; p.r=1+Math.random()*3; }
+      else if(type==='isaac_rise'||type==='isaac_fall'||type==='isaac_rain'||type==='isaac_drift'||type==='isaac_laser'||type==='isaac_enemy'){
+        // айзек-анимации: плотный рой объектов
+        if(type==='isaac_rise'){ p.vy=-(0.3+Math.random()*0.9); p.vx=(Math.random()-0.5)*0.6; p.r=6+Math.random()*6; }
+        else if(type==='isaac_fall'){ p.vy=1.2+Math.random()*2; p.vx=(Math.random()-0.5)*0.7; p.r=6+Math.random()*7; }
+        else if(type==='isaac_rain'){ p.vy=1.5+Math.random()*2.3; p.vx=(Math.random()-0.5)*1.1; p.r=5+Math.random()*5; }
+        else if(type==='isaac_laser'){ p.vy=(Math.random()-0.5)*1.5; p.vx=(Math.random()-0.5)*1.5; p.r=4+Math.random()*5; }
+        else if(type==='isaac_enemy'){ p.vy=(Math.random()-0.5)*0.6; p.vx=(Math.random()-0.5)*0.8; p.r=9+Math.random()*9; }
+        else { p.vy=(Math.random()-0.5)*0.5; p.vx=(Math.random()-0.5)*0.5; p.r=5+Math.random()*5; }
+      }
       else if(type==='fish'){ p.vy=(Math.random()-0.5)*0.5; p.vx=(0.5+Math.random()*1.3)*(Math.random()<0.5?-1:1); p.r=4+Math.random()*4.5; p.dir=p.vx>0?1:-1; p.flick=Math.random()*10; }
       else if(type==='rain'){ p.vy=3.5+Math.random()*5; p.vx=(Math.random()-0.5)*0.5; p.r=1.2; }
       else if(type==='fire'){ p.vy=-(0.4+Math.random()*1); p.vx=(Math.random()-0.5)*0.5; p.r=1.5+Math.random()*2.6; }
@@ -2340,6 +2367,34 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
       for(var wa=0;wa<5;wa++){ var wx=wa*cw/5+20; cx.strokeStyle='rgba('+Math.min(255,b.g+80|0)+',220,120,0.5)'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(wx,ch); cx.quadraticCurveTo(wx+Math.sin(sceneT*2+wa)*8,ch-28,wx-Math.sin(sceneT*3+wa)*8,ch-46); cx.stroke(); }
       return;
     }
+    if(type==='isaac_room'){ // комната Isaac: дощатый пол + колючки/пятна
+      sceneT+=0.01;
+      // тёмная подложка комнаты
+      cx.fillStyle='rgba(20,14,10,0.30)'; cx.fillRect(0,0,cw,ch);
+      // доски пола (горизонтальные)
+      var plank=Math.floor(ch/46)+1;
+      for(var pl=0;pl<plank;pl++){
+        var py=pl*46;
+        cx.fillStyle='rgba('+Math.min(255,b.r*0.6+40|0)+','+Math.min(255,b.g*0.5+25|0)+','+Math.min(255,b.b*0.4+15|0)+','+(0.10+0.03*Math.sin(sceneT+pl)).toFixed(3)+')';
+        cx.fillRect(0,py,cw,44);
+        // стыки досок
+        cx.strokeStyle='rgba(0,0,0,0.15)'; cx.lineWidth=1;
+        var off=(pl%2===0)?((sceneT*6+pl*40)%50):-((sceneT*6+pl*40)%50);
+        for(var jx=-50;jx<cw+50;jx+=90){ cx.beginPath(); cx.moveTo(jx+off,py); cx.lineTo(jx+off+26,py+44); cx.stroke(); }
+      }
+      // статичные колючки на полу (спайки) — детерминированно по cw/ch
+      cx.fillStyle='rgba(180,175,170,0.5)';
+      for(var skq=0;skq<6;skq++){
+        var sx=(skq*101+40)%cw, sy=ch-16-Math.abs(Math.sin(skq*7))*(ch*0.5);
+        cx.beginPath(); cx.moveTo(sx-4,sy); cx.lineTo(sx+4,sy); cx.lineTo(sx,sy-12); cx.closePath(); cx.fill();
+        cx.beginPath(); cx.moveTo(sx-8,sy); cx.lineTo(sx,sy); cx.lineTo(sx-4,sy-16); cx.closePath(); cx.fill();
+        cx.beginPath(); cx.moveTo(sx,sy); cx.lineTo(sx+8,sy); cx.lineTo(sx+4,sy-16); cx.closePath(); cx.fill();
+      }
+      // редкие пятна грязи
+      cx.fillStyle='rgba(60,40,25,0.12)';
+      for(var sp2o=0;sp2o<6;sp2o++){ var pxx=(sp2o*73+30)%cw, pyy=(sp2o*29+ch*0.2)%(ch*0.6); cx.beginPath(); cx.ellipse(pxx,pyy,26,14,0,0,6.2832); cx.fill(); }
+      return;
+    }
     // общий фон-подложка под цвет темы
     var gg=cx.createLinearGradient(0,0,0,ch);
     gg.addColorStop(0,'rgba('+b.r+','+b.g+','+b.b+',0.04)');
@@ -2472,6 +2527,159 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
   }
   else if(shape==='heart'){ // сердце
     cx.beginPath(); cx.moveTo(0,R*0.6); cx.bezierCurveTo(-R*1.3,-R*0.5,-R*0.6,-R*1.5,0,-R*0.6); cx.bezierCurveTo(R*0.6,-R*1.5,R*1.3,-R*0.5,0,R*0.6); cx.fillStyle=col; cx.fill();
+  }
+  else if(shape==='isaac_tear'){ // слеза Isaac: капля с бликом
+    cx.beginPath(); cx.moveTo(0,-R*1.1); cx.bezierCurveTo(R*0.9,-R*0.3,R*0.7,R*0.5,0,R*1.0); cx.bezierCurveTo(-R*0.7,R*0.5,-R*0.9,-R*0.3,0,-R*1.1); cx.closePath();
+    cx.fillStyle=col; cx.fill();
+    cx.beginPath(); cx.arc(-R*0.3,-R*0.4,R*0.16,0,6.2832); cx.fillStyle='rgba(255,255,255,'+(a*0.7).toFixed(3)+')'; cx.fill();
+    cx.strokeStyle='rgba(0,0,0,0.25)'; cx.lineWidth=1; cx.stroke();
+  }
+  else if(shape==='brimstone'){ // сера: тёмно-красная капля с ореолом
+    var bg=cx.createRadialGradient(0,0,0,0,0,R*1.9);
+    bg.addColorStop(0,'rgba(120,0,20,'+(a*0.5).toFixed(3)+')');
+    bg.addColorStop(1,'rgba(120,0,20,0)');
+    cx.beginPath(); cx.arc(0,0,R*1.9,0,6.2832); cx.fillStyle=bg; cx.fill();
+    cx.beginPath(); cx.moveTo(0,-R*1.1); cx.bezierCurveTo(R*0.9,-R*0.3,R*0.7,R*0.5,0,R*1.0); cx.bezierCurveTo(-R*0.7,R*0.5,-R*0.9,-R*0.3,0,-R*1.1); cx.closePath();
+    cx.fillStyle='rgba(140,10,25,0.95)'; cx.fill();
+    cx.strokeStyle='rgba(255,120,120,'+(a).toFixed(3)+')'; cx.lineWidth=1.4; cx.stroke();
+  }
+  else if(shape==='isaac_laser'){ // лазер Technology: прямая светящаяся линия
+    cx.rotate(Math.atan2(p.vy,p.vx||0.001));
+    var lg=cx.createLinearGradient(-R*4,0,R*4,0);
+    lg.addColorStop(0,'rgba(255,40,40,0)'); lg.addColorStop(0.5,'rgba(255,60,60,'+(a*0.9).toFixed(3)+')'); lg.addColorStop(1,'rgba(255,40,40,0)');
+    cx.strokeStyle=lg; cx.lineWidth=R*0.8; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-R*4,0); cx.lineTo(R*4,0); cx.stroke();
+    cx.strokeStyle='rgba(255,255,255,'+(a*0.8).toFixed(3)+')'; cx.lineWidth=R*0.28;
+    cx.beginPath(); cx.moveTo(-R*3.5,0); cx.lineTo(R*3.5,0); cx.stroke();
+  }
+  else if(shape==='bomb'){ // бомба с фитилём
+    cx.beginPath(); cx.arc(0,0,R*0.85,0,6.2832); cx.fillStyle='rgba(60,55,50,0.95)'; cx.fill();
+    cx.strokeStyle='rgba(20,18,16,0.8)'; cx.lineWidth=1.2; cx.stroke();
+    cx.beginPath(); cx.arc(0,0,R*0.4,0,6.2832); cx.fillStyle='rgba(180,170,150,0.7)'; cx.fill();
+    // фитиль
+    cx.strokeStyle='rgba(200,180,120,0.9)'; cx.lineWidth=R*0.18;
+    cx.beginPath(); cx.moveTo(R*0.7,-R*0.5); cx.quadraticCurveTo(R*1.1,-R*1.0,R*0.9,-R*1.3); cx.stroke();
+    // искра на фитиле
+    cx.globalAlpha=a; cx.fillStyle='#ff8833';
+    cx.beginPath(); cx.arc(R*0.9,-R*1.35,R*0.14+0.05*Math.sin(p.tw*6),0,6.2832); cx.fill();
+    cx.globalAlpha=1;
+  }
+  else if(shape==='key'){ // ключ Isaac
+    cx.save();
+    cx.beginPath(); cx.arc(-R*0.5,0,R*0.5,0,6.2832); cx.lineWidth=R*0.28; cx.strokeStyle='#d8c98a'; cx.stroke();
+    cx.strokeStyle='#c9b878'; cx.lineWidth=R*0.26;
+    cx.beginPath(); cx.moveTo(0,0); cx.lineTo(R*0.45,0); cx.lineTo(R*0.45,R*0.3); cx.lineTo(R*0.55,R*0.3); cx.lineTo(R*0.55,R*0.12);
+    cx.moveTo(R*0.45,R*0.12); cx.lineTo(R*0.6,R*0.12); cx.lineTo(R*0.6,-R*0.05); cx.lineTo(R*0.75,-R*0.05); cx.lineTo(R*0.75,-R*0.18); cx.lineTo(R*0.45,-R*0.18); cx.stroke();
+    cx.restore();
+  }
+  else if(shape==='isaac_heart'){ // красное сердце-хит
+    cx.beginPath(); cx.moveTo(0,R*0.6); cx.bezierCurveTo(-R*1.1,-R*0.4,-R*0.5,-R*1.3,0,-R*0.5); cx.bezierCurveTo(R*0.5,-R*1.3,R*1.1,-R*0.4,0,R*0.6); cx.closePath();
+    cx.fillStyle='#c03040'; cx.fill();
+    cx.strokeStyle='rgba(0,0,0,0.3)'; cx.lineWidth=1.2; cx.stroke();
+    cx.beginPath(); cx.arc(-R*0.3,-R*0.4,R*0.12,0,6.2832); cx.fillStyle='rgba(255,255,255,0.5)'; cx.fill();
+  }
+  else if(shape==='ib_coin'){ // монета: золотой диск с бликом и гуртом
+    cx.beginPath(); cx.arc(0,0,R*0.95,0,6.2832); cx.fillStyle='#c9a63a'; cx.fill();
+    cx.strokeStyle='rgba(120,90,20,0.8)'; cx.lineWidth=R*0.28; cx.stroke();
+    cx.beginPath(); cx.arc(0,0,R*0.55,0,6.2832); cx.fillStyle='#e0c04c'; cx.fill();
+    cx.strokeStyle='rgba(160,125,30,0.6)'; cx.lineWidth=R*0.12; cx.stroke();
+    cx.beginPath(); cx.arc(-R*0.3,-R*0.35,R*0.12,0,6.2832); cx.fillStyle='rgba(255,255,255,0.7)'; cx.fill();
+  }
+  else if(shape==='ib_soul'){ // душевное сердце: полупрозрачное голубое
+    cx.beginPath(); cx.moveTo(0,R*0.55); cx.bezierCurveTo(-R*1.0,-R*0.4,-R*0.5,-R*1.2,0,-R*0.45); cx.bezierCurveTo(R*0.5,-R*1.2,R*1.0,-R*0.4,0,R*0.55); cx.closePath();
+    cx.fillStyle='rgba(90,170,230,'+(a*0.75).toFixed(3)+')'; cx.fill();
+    cx.strokeStyle='rgba(200,235,255,0.9)'; cx.lineWidth=1.2; cx.stroke();
+  }
+  else if(shape==='ib_blackheart'){ // чёрное сердце с красным бликом
+    cx.beginPath(); cx.moveTo(0,R*0.6); cx.bezierCurveTo(-R*1.1,-R*0.4,-R*0.5,-R*1.3,0,-R*0.5); cx.bezierCurveTo(R*0.5,-R*1.3,R*1.1,-R*0.4,0,R*0.6); cx.closePath();
+    cx.fillStyle='#3a3a42'; cx.fill();
+    cx.strokeStyle='rgba(10,10,14,0.8)'; cx.lineWidth=1.2; cx.stroke();
+    cx.beginPath(); cx.arc(-R*0.3,-R*0.4,R*0.13,0,6.2832); cx.fillStyle='rgba(255,80,90,0.8)'; cx.fill();
+  }
+  else if(shape==='tarot'){ // карта таро: карточка с рамкой и руной
+    cx.save();
+    cx.fillStyle='rgba(235,230,215,0.92)'; cx.fillRect(-R*0.7,-R*1.0,R*1.4,R*2.0);
+    cx.strokeStyle='rgba(150,120,60,0.9)'; cx.lineWidth=R*0.12; cx.strokeRect(-R*0.7,-R*1.0,R*1.4,R*2.0);
+    cx.strokeStyle='rgba(150,120,60,0.7)'; cx.lineWidth=R*0.08; cx.strokeRect(-R*0.52,-R*0.82,R*1.04,R*1.64);
+    cx.fillStyle='#b04060'; cx.beginPath(); cx.arc(0,0,R*0.42,0,6.2832); cx.fill();
+    cx.fillStyle='#6a2020'; cx.beginPath(); cx.arc(0,-R*0.1,R*0.2,0,6.2832); cx.fill();
+    cx.restore();
+  }
+  else if(shape==='ib_fly'){ // муха Isaac: тело + крылья
+    cx.beginPath(); cx.arc(0,0,R*0.7,0,6.2832); cx.fillStyle='#703a3a'; cx.fill();
+    cx.strokeStyle='rgba(30,10,10,0.8)'; cx.lineWidth=1; cx.stroke();
+    // глаза
+    cx.fillStyle='#e03030'; cx.beginPath(); cx.arc(-R*0.25,-R*0.25,R*0.22,0,6.2832); cx.fill();
+    cx.fillStyle='#e03030'; cx.beginPath(); cx.arc(R*0.25,-R*0.25,R*0.22,0,6.2832); cx.fill();
+    cx.fillStyle='#a01010'; cx.beginPath(); cx.arc(-R*0.1,-R*0.05,R*0.08,0,6.2832); cx.fill();
+    // крылья (взмах)
+    var flap=Math.sin(p.tw*5)*0.5;
+    cx.fillStyle='rgba(200,220,240,'+(a*0.5).toFixed(3)+')';
+    cx.save(); cx.rotate(-0.5+flap); cx.beginPath(); cx.ellipse(-R*0.8,-R*0.3,R*0.5,R*0.3,0,0,6.2832); cx.fill(); cx.restore();
+    cx.save(); cx.rotate(0.5-flap); cx.beginPath(); cx.ellipse(R*0.8,-R*0.3,R*0.5,R*0.3,0,0,6.2832); cx.fill(); cx.restore();
+    cx.fillStyle='rgba(255,255,255,0.15)'; cx.beginPath(); cx.arc(-R*0.2,R*0.3,R*0.15,0,6.2832); cx.fill();
+  }
+  else if(shape==='ib_gaper'){ // Gaper: злобный рот, глаза
+    cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle='#c86a5a'; cx.fill();
+    cx.strokeStyle='rgba(60,20,15,0.7)'; cx.lineWidth=1.2; cx.stroke();
+    // глаза
+    cx.fillStyle='#fff'; cx.beginPath(); cx.arc(-R*0.4,-R*0.35,R*0.24,0,6.2832); cx.fill();
+    cx.fillStyle='#fff'; cx.beginPath(); cx.arc(R*0.4,-R*0.35,R*0.24,0,6.2832); cx.fill();
+    cx.fillStyle='#000'; cx.beginPath(); cx.arc(-R*0.4,-R*0.35,R*0.1,0,6.2832); cx.fill();
+    cx.fillStyle='#000'; cx.beginPath(); cx.arc(R*0.4,-R*0.35,R*0.1,0,6.2832); cx.fill();
+    // рот
+    cx.fillStyle='#5a2020'; cx.beginPath(); cx.moveTo(-R*0.5,R*0.15); cx.quadraticCurveTo(0,R*0.9,R*0.5,R*0.15); cx.quadraticCurveTo(0,R*0.5,-R*0.5,R*0.15); cx.fill();
+    // зубы
+    cx.fillStyle='#fff'; cx.beginPath(); cx.moveTo(-R*0.5,R*0.15); cx.lineTo(-R*0.4,R*0.05); cx.lineTo(-R*0.28,R*0.15); cx.lineTo(-R*0.12,R*0.05); cx.lineTo(0,R*0.15); cx.lineTo(R*0.12,R*0.05); cx.lineTo(R*0.28,R*0.15); cx.lineTo(R*0.4,R*0.05); cx.lineTo(R*0.5,R*0.15); cx.lineTo(-R*0.5,R*0.15); cx.fill();
+  }
+  else if(shape==='ib_spider'){ // паук Isaac: тело + 4 ноги
+    cx.strokeStyle='rgba(30,10,10,0.85)'; cx.lineWidth=R*0.22; cx.lineCap='round';
+    var bend=Math.sin(p.tw*6)*0.4;
+    for(var l=0;l<4;l++){ var sg=(l%2===0)?1:-1, sx=(l<2?-R*0.5:R*0.5); cx.beginPath(); cx.moveTo(sx,0); cx.quadraticCurveTo(sx+sg*R*0.5,bend*R,-sx<0?sg*R*-0.9:sg*R*0.9,R*0.7); cx.stroke(); }
+    cx.beginPath(); cx.arc(0,0,R*0.65,0,6.2832); cx.fillStyle='#5a2a2a'; cx.fill();
+    cx.strokeStyle='rgba(25,5,5,0.8)'; cx.lineWidth=1; cx.stroke();
+    cx.fillStyle='#e03030'; cx.beginPath(); cx.arc(-R*0.22,-R*0.2,R*0.16,0,6.2832); cx.fill();
+    cx.fillStyle='#e03030'; cx.beginPath(); cx.arc(R*0.22,-R*0.2,R*0.16,0,6.2832); cx.fill();
+    cx.fillStyle='#a01010'; cx.beginPath(); cx.arc(-R*0.1,-R*0.05,R*0.06,0,6.2832); cx.fill();
+  }
+  else if(shape==='ib_chest'){ // сундук: корпус + крышка + золотые заклёпки
+    cx.fillStyle='#8a5a30'; cx.fillRect(-R*0.8,-R*0.45,R*1.6,R*0.9);
+    cx.strokeStyle='rgba(40,20,5,0.85)'; cx.lineWidth=1.4; cx.strokeRect(-R*0.8,-R*0.45,R*1.6,R*0.9);
+    // крышка (полукруг)
+    cx.beginPath(); cx.moveTo(-R*0.8,-R*0.45); cx.quadraticCurveTo(0,-R*1.15,R*0.8,-R*0.45); cx.closePath(); cx.fillStyle='#9a6a3c'; cx.fill();
+    cx.strokeStyle='rgba(40,20,5,0.85)'; cx.lineWidth=1.4; cx.stroke();
+    // заклёпки
+    cx.fillStyle='#e0c060';
+    [[-R*0.6,-R*0.25],[R*0.6,-R*0.25],[0,-R*0.75]].forEach(function(pt){ cx.beginPath(); cx.arc(pt[0],pt[1],R*0.12,0,6.2832); cx.fill(); });
+    // замочная скважина
+    cx.fillStyle='#3a2a10'; cx.beginPath(); cx.arc(0,R*0.12,R*0.12,0,6.2832); cx.fill();
+  }
+  else if(shape==='ib_guppy'){ // часть Guppy: кошачья голова
+    cx.beginPath(); cx.arc(0,R*0.1,R*0.8,0,6.2832); cx.fillStyle='#b89a6a'; cx.fill();
+    cx.strokeStyle='rgba(40,25,10,0.7)'; cx.lineWidth=1; cx.stroke();
+    // уши
+    cx.beginPath(); cx.moveTo(-R*0.7,-R*0.25); cx.lineTo(-R*0.6,-R*0.95); cx.lineTo(-R*0.25,-R*0.5); cx.closePath(); cx.fillStyle='#b89a6a'; cx.fill();
+    cx.beginPath(); cx.moveTo(R*0.7,-R*0.25); cx.lineTo(R*0.6,-R*0.95); cx.lineTo(R*0.25,-R*0.5); cx.closePath(); cx.fillStyle='#b89a6a'; cx.fill();
+    // глаза (красные, как Guppy-часть)
+    cx.fillStyle='#c02030'; cx.beginPath(); cx.arc(-R*0.32,-R*0.05,R*0.16,0,6.2832); cx.fill();
+    cx.fillStyle='#c02030'; cx.beginPath(); cx.arc(R*0.32,-R*0.05,R*0.16,0,6.2832); cx.fill();
+    cx.fillStyle='#000'; cx.beginPath(); cx.arc(-R*0.3,0,R*0.06,0,6.2832); cx.fill();
+    cx.fillStyle='#000'; cx.beginPath(); cx.arc(R*0.3,0,R*0.06,0,6.2832); cx.fill();
+    // нос
+    cx.fillStyle='#e07080'; cx.beginPath(); cx.arc(0,R*0.28,R*0.1,0,6.2832); cx.fill();
+  }
+  else if(shape==='ib_wings'){ // крылья (Dead Cat / demon): два крыла
+    var wx2=Math.sin(p.tw*4)*0.15;
+    cx.fillStyle='rgba(180,180,190,0.55)';
+    cx.save(); cx.rotate(-0.5+wx2); cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(-R*0.6,-R*0.7,-R*1.1,-R*0.6); cx.quadraticCurveTo(-R*0.7,-R*0.2,-R*0.3,0.1); cx.closePath(); cx.fill(); cx.restore();
+    cx.fillStyle='rgba(210,210,220,0.55)';
+    cx.save(); cx.rotate(0.5-wx2); cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(R*0.6,-R*0.7,R*1.1,-R*0.6); cx.quadraticCurveTo(R*0.7,-R*0.2,R*0.3,0.1); cx.closePath(); cx.fill(); cx.restore();
+  }
+  else if(shape==='ib_horn'){ // рога (змей / demon)
+    cx.strokeStyle='#c8c8d0'; cx.lineWidth=R*0.28; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(0,-R*0.2); cx.quadraticCurveTo(-R*0.4,-R*0.4,-R*0.9,-R*0.9); cx.stroke();
+    cx.beginPath(); cx.moveTo(0,-R*0.2); cx.quadraticCurveTo(R*0.4,-R*0.4,R*0.9,-R*0.9); cx.stroke();
+    cx.fillStyle='rgba(80,80,90,0.5)'; cx.beginPath(); cx.arc(0,0,R*0.4,0,6.2832); cx.fill();
   }
   else { // фолбэк — круглая частица
     cx.beginPath(); cx.arc(0,0,R,0,6.2832); cx.fillStyle=col; cx.fill();
