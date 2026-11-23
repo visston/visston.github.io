@@ -1543,28 +1543,50 @@ var tilesBox=document.getElementById('tilesBox'), overlay=document.getElementByI
     }
     return arr;
   }
-  // последовательная запись в облако: одна операция за раз (без гонок)
+  // атомарная запись в облако через ОБЩУЮ очередь: каждая задача «прочитать свежее → добавить → записать»
+  // выполняется целиком за один заход, чтобы параллельные регистрации не перезаписывали друг друга
   var sharedWriteQueue=Promise.resolve();
   function saveSharedUsers(list){
     sharedWriteQueue=sharedWriteQueue.then(function(){
       return new Promise(function(done){
         var attempt=0;
         var go=function(){
-          fetch(USERBIN_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(list)})
+          fetch(USERBIN_URL,{method:'PUT',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify(list)})
             .then(function(){ done(); })
-            .catch(function(){ attempt++; if(attempt<3) setTimeout(go,600); else done(); });
+            .catch(function(){ attempt++; if(attempt<3) setTimeout(go,700); else done(); });
         };
         go();
       });
     });
+    return sharedWriteQueue;
   }
-  // добавить имя в облако надёжно: читаем свежее, кладём, ждём записи
   function addSharedUser(name, date){
-    loadSharedUsers(function(cur){
-      var fresh = cur && cur.length ? cur : [];
-      var exists=false; fresh.forEach(function(u){ if(u && u.name && String(u.name).toLowerCase()===String(name).toLowerCase()) exists=true; });
-      if(!exists){ fresh.push({name:name,date:date}); saveSharedUsers(fresh); }
+    var task=sharedWriteQueue.then(function(){
+      return new Promise(function(done){
+        // всегда идём «на чистый» URL без кэша, чтобы не потерять уже записанные имена
+        loadSharedUsers(function(cur){
+          var fresh=(cur&&cur.length)?cur.slice():[];
+          var exists=false; fresh.forEach(function(u){ if(u&&u.name&&String(u.name).toLowerCase()===String(name).toLowerCase()) exists=true; });
+          if(!exists) fresh.push({name:name,date:date});
+          var attempt=0;
+          var write=function(){
+            fetch(USERBIN_URL,{method:'PUT',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify(fresh)})
+              .then(function(){
+                // контроль: после записи перечитываем и убеждаемся, что имя на месте
+                loadSharedUsers(function(verify){
+                  var ok=verify&&verify.some(function(u){ return u&&String(u.name).toLowerCase()===String(name).toLowerCase(); });
+                  if(!ok && attempt<3){ attempt++; setTimeout(write,900); }
+                  else done();
+                });
+              })
+              .catch(function(){ done(); });
+          };
+          write();
+        });
+      });
     });
+    sharedWriteQueue=task;
+    return task;
   }
   function isTaken(n){ var low=n.toLowerCase(); for(var i=0;i<takenNames.length;i++){ if(takenNames[i].toLowerCase()===low) return true; } return false; }
   // аккаунт: создаётся один раз и навсегда (ник + пароль-хэш). Менять нельзя.
